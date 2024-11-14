@@ -1,0 +1,1 @@
+Utilizar flag com valor constante que quando alterada indica que a cobra morreu. A cada movimento, a posição da "cabeça" deve ser comparada com as bordas do cenário e com as outras posições que compõem seu corpo.
