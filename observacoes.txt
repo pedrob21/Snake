@@ -1,1 +1,18 @@
 Utilizar flag com valor constante que quando alterada indica que a cobra morreu. A cada movimento, a posição da "cabeça" deve ser comparada com as bordas do cenário e com as outras posições que compõem seu corpo.
+
+Podemos nos basear na seguinte estrutura de outro projeto:
+"""
+main:
+	call Iniciar
+	Loop:
+		Loop_Jogo:
+			call Desenha_Cobra
+			call Cobra_Morreu ; altera o valor da flag caso encoste onde não pode
+			call Move_Cobra ; adicionar restrição para não se movimentar em direção contrária (esquerda para direita, cima para baixo)
+			call Verifica_Comida ; verifica se a cobra tocou na comida, se sim, altera a posição da comida e incrementa o tamanho da cobra
+			call Delay
+			jmp Loop_Jogo ; realiza o loop a cada posição que a cobra passa
+		Loop_Recomecar:
+			call Recomecar ; função para perguntar se deseja jogar novamente
+			jmp Loop_Recomecar
+"""
