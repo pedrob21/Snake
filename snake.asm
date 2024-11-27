@@ -23,6 +23,7 @@ jmp main
 
 main:
     call ImprimeTelaApresentacao
+    call Start
 
 
 ImprimeTelaApresentacao:
@@ -72,9 +73,39 @@ ImprimeStr:
 	pop r1
 	pop r0
 	rts
+Start:
+    loadn r2, #13
+    inchar r1
+    cmp r1, r2
+    jne Start
 
+    call TrocarTelaJogo
 
-	
+    pop r0
+    pop r1
+    pop r2
+
+    rts
+
+TrocarTelaJogo:
+    push r2
+    push r0
+    
+    loadn r2, #13
+    loadn r0, #100      ; Carrega o ASCII do caractere que você quer imprimir (100, por exemplo)
+    call ImprimeTelaJogo
+
+    pop r0
+    pop r2
+    rts    
+
+ImprimeTelaJogo:
+    loadn r0, #TelaJogo00
+	loadn r1, 1024
+
+    call ImprimeTela
+    rts
+
 TelaApresentacao00: string "                                        "
 TelaApresentacao01: string "                                        "
 TelaApresentacao02: string "                                        "
@@ -105,3 +136,34 @@ TelaApresentacao26: string "               BOM JOGO!                "
 TelaApresentacao27: string "                                        "
 TelaApresentacao28: string "  PRECIONE QUALQUER TECLA PARA COMECAR  "
 TelaApresentacao29: string "                                        "
+
+TelaJogo00: string "----------------------------------------"
+TelaJogo01: string "|                                      |"
+TelaJogo02: string "|                                      |"
+TelaJogo03: string "|                                      |"
+TelaJogo04: string "|                                      |"
+TelaJogo05: string "|                                      |"
+TelaJogo06: string "|                                      |"
+TelaJogo07: string "|                                      |"
+TelaJogo08: string "|                                      |"
+TelaJogo09: string "|            OLHA a COBRA              |"
+TelaJogo10: string "|                                      |"
+TelaJogo11: string "|                                      |"
+TelaJogo12: string "|                                      |"
+TelaJogo13: string "|                                      |"
+TelaJogo14: string "|                                      |"
+TelaJogo15: string "|                                      |"
+TelaJogo16: string "|                                      |"
+TelaJogo17: string "|                                      |"
+TelaJogo18: string "|                                      |"
+TelaJogo19: string "|                                      |"
+TelaJogo20: string "|                                      |"
+TelaJogo21: string "|                                      |"
+TelaJogo22: string "|                                      |"
+TelaJogo23: string "|                                      |"
+TelaJogo24: string "|                                      |"
+TelaJogo25: string "|                                      |"
+TelaJogo26: string "|                                      |"
+TelaJogo27: string "|                                      |"
+TelaJogo28: string "|                                      |"
+TelaJogo29: string "----------------------------------------"
