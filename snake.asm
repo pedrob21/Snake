@@ -101,7 +101,7 @@ TrocarTelaJogo:
 
 ImprimeTelaJogo:
     loadn r0, #TelaJogo00
-	loadn r1, 1024
+	loadn r1, #1024
 
     call ImprimeTela
     rts
@@ -114,9 +114,9 @@ TelaApresentacao04: string "                                        "
 TelaApresentacao05: string "                                        "
 TelaApresentacao06: string "            JOGO CRIADO POR:            "
 TelaApresentacao07: string "                                        "
-TelaApresentacao08: string "        DAVID                           "
-TelaApresentacao09: string "        LUCAS                           "
-TelaApresentacao10: string "        PEDRO                           "
+TelaApresentacao08: string "       DAVI                             "
+TelaApresentacao09: string "       LUCAS                            "
+TelaApresentacao10: string "       PEDRO                            "
 TelaApresentacao11: string "       MARCEL HENRIQUE R BATISTA        "
 TelaApresentacao12: string "                                        "
 TelaApresentacao13: string "                                        "
