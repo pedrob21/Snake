@@ -19,6 +19,9 @@
 ; 3584 aqua							1110 0000
 ; 3840 branco						1111 0000
 
+Posicao_Cobra:  var #500
+Tamanho_Cobra:	var #1
+
 jmp main
 
 main:
@@ -80,12 +83,83 @@ Start:
     jne Start
 
     call TrocarTelaJogo
+    call IniciaCobra
 
     pop r0
     pop r1
     pop r2
 
     rts
+
+IniciaCobra:
+    loadn r0, #4
+		store Tamanho_Cobra, r0
+		
+		loadn 	r0, #Posicao_Cobra
+		loadn 	r1, #700
+		storei 	r0, r1
+		
+		inc 	r0
+		dec 	r1
+		storei 	r0, r1
+		
+		inc 	r0
+		dec 	r1
+		storei 	r0, r1
+		
+		inc 	r0
+		dec 	r1
+		storei 	r0, r1
+		
+		inc 	r0
+		dec 	r1
+		storei 	r0, r1
+		
+		inc 	r0
+		loadn 	r1, #0
+		storei 	r0, r1
+				
+		call Primeira_Cobra
+		
+		loadn r0, #0
+		
+		rts
+    pop r0
+    pop r1
+    pop r2
+    rts
+
+Primeira_Cobra:
+	push r0
+	push r1
+	push r2
+	push r3
+	
+	loadn r0, #Posicao_Cobra		
+	loadn r1, #64				
+	loadi r2, r0					
+		
+	loadn 	r3, #0					
+	
+	Loop_Imprimir:
+		outchar r1, r2
+		
+		inc 	r0
+		loadi 	r2, r0
+		
+		cmp r2, r3
+		jne Loop_Imprimir
+	
+	
+	loadn 	r0, #820
+	outchar r1, r0
+	
+	pop	r3
+	pop r2
+	pop r1
+	pop r0
+	
+	rts
 
 TrocarTelaJogo:
     push r2
