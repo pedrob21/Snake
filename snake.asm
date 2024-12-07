@@ -18,7 +18,6 @@ jmp InitGame
 ; 3584 aqua							1110 0000
 ; 3840 branco						1111 0000
 
-; Variáveis
 SnakePos: var #1               ; Posição atual da cobra
 SnakeTailPos: var #1           ; Posição anterior da cobra
 FoodIndex: var #1              ; Índice para o array de posição da comida
@@ -27,97 +26,93 @@ LastKey: var #1                ; Última tecla AWSD pressionada, usada para mant
 Length: var #1                 ; Comprimento da cobra
 SnakeBody: var #300            ; A	rmazena as posições do corpo da cobra
 
-; Variáveis de score
 UnitScore: var #1
 TenScore: var #1
 HundredScore: var #1
-; Valores iniciais
+
+
 static UnitScore, #'0'
 static TenScore, #'0'
 static HundredScore, #'0'
 
 Food: var #1200
 
-; Inicialização do jogo
 InitGame:
-    ; Tela de menu
     MenuScreen:
-        call ClearScreen       ; Limpa a tela
-        loadn r1, #TelaApresentacao00   ; Endereço da primeira linha da cena do menu
+        call ClearScreen      
+        loadn r1, #TelaApresentacao00 
         loadn r2, #1280        ; Cor roxa
-        call PrintScreen       ; Imprime a cena do menu com a cor roxa
+        call PrintScreen     
 
     ; Loop do menu
     MenuLoop:
-        loadn r3, #13         ; Valor padrão da tecla se nenhuma tecla for pressionada
-        inchar r4              ; Entrada do teclado
-        cmp r4, r3             ; Compara se a tecla enter foi pressionada
-        jeq PreGameScreen           ; Continua lendo até que uma tecla válida seja pressionada
-        jmp MenuLoop          ; Se sim, inicia o jogo
+        loadn r3, #13        
+        inchar r4            
+        cmp r4, r3            
+        jeq PreGameScreen         
+        jmp MenuLoop         
 
-	; Inicialização do jogo
 StartGame:
-    call ClearScreen           ; Limpa a tela
-    loadn r1, #TelaJogo0       ; Endereço da primeira linha da cena do jogo
+    call ClearScreen          
+    loadn r1, #TelaJogo0      
     loadn r2, #1536            ; Cor azul claro
     call PrintScreen           ; Imprime a cena do jogo na cor azul claro
-    loadn r5, #0               ; Reinicia o comprimento
+    loadn r5, #0               
     store Length, r5
-    loadn r0, #700             ; Posição inicial da cobra
+    loadn r0, #700            
     store SnakePos, r0         ; Armazena a posição na variável
     dec r0
     store SnakeBody, r0        ; Posição inicial do corpo da cobra
-    loadn r0, #'d'             ; Configura para mover a cobra para cima inicialmente
+    loadn r0, #'d'             
     store LastKey, r0          ; Armazena em LastKey para manter o movimento a cada ciclo
-    call PrintFood             ; Chama a função para exibir a primeira comida no jogo
-    call ResetScore            ; Reseta o score
+    call PrintFood             
+    call ResetScore            
 
 GameLoop:
-    call MoveSnake             ; Chama a função responsável por mover a cobra
-    call DrawSnake             ; Chama a função responsável por desenhar a cobra
-    call Delay                 ; Chama a função responsável pelo atraso
-    jmp GameLoop               ; Reinicia o loop
+    call MoveSnake             
+    call DrawSnake          
+    call Delay               
+    jmp GameLoop           
 
-; Tela de morte ajustada para reiniciar jogo com TelaPreJogo00
 DeathScreen:
-    call ClearScreen           ; Limpa a tela
+    call ClearScreen         
     loadn r1, #TelaPosColisao00 ; Endereço onde a cena do menu de morte começa
     loadn r2, #2304            ; Cor vermelha
-    call PrintScreen           ; Imprime a cena do menu de morte na cor vermelha
-    call DisplayScoreDeathScreen ; Exibe o score atual na tela de morte
+    call PrintScreen          
+    call DisplayScoreDeathScreen
 
 DeathLoop:
     loadn r2, #121             ; Código ASCII da tecla 'y'
     loadn r3, #110             ; Código ASCII da tecla 'n'
-    inchar r4                  ; Entrada do teclado
+    inchar r4                
     cmp r4, r3                 ; Verifica se é 'n'
-    jeq endGame                ; Sai do jogo se 'n' for pressionado
+    jeq endGame               
     cmp r4, r2                 ; Verifica se é 'y'
-    jeq PreGameScreen          ; Vai para a tela de pré-jogo se 'y' for pressionado
-    jmp DeathLoop              ; Continua aguardando uma entrada válida
+    jeq PreGameScreen         
+    jmp DeathLoop            
 
 PreGameScreen:
-    call ClearScreen           ; Limpa a tela
+    call ClearScreen         
     loadn r1, #TelaPreJogo00   ; Endereço da tela de pré-jogo
-    loadn r2, #1280            ; Cor da tela de pré-jogo (roxo)
-    call PrintScreen           ; Exibe a tela de pré-jogo
+    loadn r2, #1280           
+    call PrintScreen         
     call DelayInitScreen    
-    jmp StartGame              ; Reinicia o jogo após a tela de pré-jogo
+    jmp StartGame              
 
 endGame:
-    call ClearScreen           ; Limpa a tela
+    call ClearScreen        
     call printThankYouScreen
     halt
 
 printThankYouScreen:
-    loadn r1, #TelaAgradecimento00 ; Carrega o endereço do vetor que contém a tela
+    loadn r1, #TelaAgradecimento00
     loadn r2, #1280                ; Cor da impressão. Cor prata
     call PrintScreen
     rts
 
 ; Função para desenhar a cobra
 DrawSnake:
-    push r0                    ; Salva os valores dos registradores
+    push r0   
     push r1
     push r2
     push r3
@@ -126,28 +121,28 @@ DrawSnake:
     push r6
 
     loadn r1, #368            ; Usa o caractere 'p' para representar a cobra
-    loadn r5, #' '   	          ; Também carrega ' ' para apagar o corpo
-    load r0, SnakePos          ; Carrega a posição da cobra em R0
-    loadn r2, #SnakeBody       ; Carrega o endereço da primeira posição do corpo da cobra
-    loadn r4, #0               ; Carrega 0 e Length para o loop do corpo
+    loadn r5, #' '   	       ; Também carrega ' ' para apagar o corpo
+    load r0, SnakePos         
+    loadn r2, #SnakeBody      
+    loadn r4, #0             
     load r6, Length
 
     DrawSnakeLoop:
-        loadi r3, r2           ; Carrega a posição anterior do corpo da cobra
-        outchar r1, r0         ; Imprime a posição atual da cobra
+        loadi r3, r2           
+        outchar r1, r0        
         outchar r5, r3         ; Apaga a posição anterior
         loadn r1, #2409        ; Define o corpo com o caractere 'i' vermelho
         storei r2, r0          ; Armazena a posição atual no vetor SnakeBody
-        mov r0, r3             ; Atualiza a posição atual para a próxima iteração
-        cmp r4, r6             ; Verifica se todos os segmentos da cobra foram impressos
-        jeq DrawSnakeEnd       ; Se todos foram impressos, termina a rotina
+        mov r0, r3            
+        cmp r4, r6            
+        jeq DrawSnakeEnd     
         inc r4
         inc r2
         jmp DrawSnakeLoop
 
     DrawSnakeEnd:
         store SnakeTailPos, r3 ; Armazena a posição da cauda
-        pop r6                 ; Restaura os registradores
+        pop r6                
         pop r5
         pop r4
         pop r3
@@ -167,18 +162,18 @@ CheckCollision:
 
     load r0, SnakePos         ; Carrega a posição da cobra em R0
     loadn r1, #SnakeBody      ; Carrega o endereço do vetor dos corpos da cobra
-    loadn r2, #0              ; Carrega 0 em R2
-    load r4, Length           ; Carrega o comprimento da cobra em R4
+    loadn r2, #0              
+    load r4, Length           
     loadn r5, #'*'            ; Carrega '*' para paredes
 
     CollisionLoop:
-        cmp r2, r4            ; Para i de 0 ao comprimento da cobra
+        cmp r2, r4           
         jeq CollisionEnd
-        loadi r3, r1          ; Carrega a posição de cada pedaço do corpo da cobra
-        cmp r0, r3            ; Compara a posição da cabeça com o pedaço do corpo
-        jeq DeathScreen       ; Se igual, ocorre uma colisão e a cobra morre
-        inc r2                ; Incrementa i no loop
-        inc r1                ; Move para a próxima posição do pedaço do corpo
+        loadi r3, r1          
+        cmp r0, r3           
+        jeq DeathScreen       
+        inc r2              
+        inc r1            
         jmp CollisionLoop
 
     CollisionEnd:
@@ -190,18 +185,17 @@ CheckCollision:
         pop r0
         rts
 
-; Função para mover a cobra
 MoveSnake:
     push r0
     push r1
     push r2
 
-    call RecalculateSnakePos  ; Chama a função responsável por calcular a próxima posição da cobra
-    load r0, SnakePos         ; Carrega a posição da cobra
-    load r2, FoodPos          ; Carrega a posição da comida
+    call RecalculateSnakePos  
+    load r0, SnakePos         ;
+    load r2, FoodPos         
     cmp r0, r2
-    jeq IncreaseSnake         ; Se igual (comida comida), chama a função para aumentar a cobra
-    call CheckCollision       ; Chama a função para verificar se houve colisão da cobra
+    jeq IncreaseSnake       
+    call CheckCollision  
 
     MoveSnake_Skip:
         pop r2
@@ -209,7 +203,6 @@ MoveSnake:
         pop r0
         rts
 
-; Função para recalcular a posição da cobra
 RecalculateSnakePos:
     push r0
     push r1
@@ -218,10 +211,9 @@ RecalculateSnakePos:
     push r4
     push r5
 
-    load r0, SnakePos         ; Carrega a posição atual da cobra
-    inchar r1                 ; Recebe a tecla pressionada
+    load r0, SnakePos        
+    inchar r1                 
 
-    ; Verifica se a tecla pressionada foi 'a'
     loadn r2, #'a'
     cmp r1, r2
     jeq MoveLeft
@@ -257,7 +249,7 @@ RecalculateSnakePos:
     jeq MoveDown
 
     RecalculatePos_End:
-        store SnakePos, r0    ; Armazena a posição da cobra
+        store SnakePos, r0   
         pop r5
         pop r4
         pop r3
@@ -266,107 +258,100 @@ RecalculateSnakePos:
         pop r0
         rts
 
-    ; Tratamento para movimentação para a esquerda
     MoveLeft:
         loadn r1, #40
         loadn r2, #1
-        mod r1, r0, r1         ; Obtém o resto da divisão da posição da cobra por 40
-        cmp r1, r2             ; Verifica se está na coluna 1 da tela (borda do cenário)
-        jeq DeathScreen        ; Se sim, morte!
+        mod r1, r0, r1        
+        cmp r1, r2             
+        jeq DeathScreen        
         load r4, LastKey
         loadn r5, #'d'
         cmp r4, r5
         jeq MoveRight
-        dec r0                 ; Move uma célula para a esquerda
+        dec r0                 
         loadn r3, #'a'
         store LastKey, r3
         jmp RecalculatePos_End
 
-    ; Tratamento para movimentação para a direita
     MoveRight:
         loadn r1, #40
         loadn r2, #38
-        mod r1, r0, r1         ; Obtém o resto da divisão da posição da cobra por 40
-        cmp r1, r2             ; Verifica se está na coluna 38 da tela (borda do cenário)
-        jeq DeathScreen        ; Se sim, morte!
+        mod r1, r0, r1        
+        cmp r1, r2             
+        jeq DeathScreen      
         load r4, LastKey
         loadn r5, #'a'
         cmp r4, r5
         jeq MoveLeft
-        inc r0                 ; Move uma célula para a direita
+        inc r0                
         loadn r3, #'d'
         store LastKey, r3
         jmp RecalculatePos_End
 
-    ; Tratamento para movimentação para cima
     MoveUp:
         loadn r1, #160
-        cmp r0, r1             ; Compara se a cobra está na linha 3 (<160)
-        jle DeathScreen        ; Se sim, morte!
+        cmp r0, r1            
+        jle DeathScreen        
         load r4, LastKey
         loadn r5, #'s'
         cmp r4, r5
         jeq MoveDown
         loadn r1, #40
-        sub r0, r0, r1         ; Move uma célula para cima
+        sub r0, r0, r1       
         loadn r3, #'w'
         store LastKey, r3
         jmp RecalculatePos_End
 
-    ; Tratamento para movimentação para baixo
     MoveDown:
         loadn r1, #1119
-        cmp r0, r1             ; Compara se a cobra está na linha 29
-        jgr DeathScreen        ; Se sim, morte!
+        cmp r0, r1             
+        jgr DeathScreen        
         load r4, LastKey
         loadn r5, #'w'
         cmp r4, r5
         jeq MoveUp
         loadn r1, #40
-        add r0, r0, r1         ; Move uma célula para baixo
+        add r0, r0, r1        
         loadn r3, #'s'
         store LastKey, r3
         jmp RecalculatePos_End
 
-; Função para aumentar a cobra e incrementar o score
 IncreaseSnake:
     push r0
     push r1
     push r2
 
     call PrintFood            ; Se a cobra come a comida, imprime outra
-    call UpdateScore          ; Atualiza o score
-    load r0, SnakeTailPos     ; Carrega a posição da cauda
-    load r2, Length           ; Carrega o comprimento da cobra
+    call UpdateScore         
+    load r0, SnakeTailPos     
+    load r2, Length          
     loadn r1, #SnakeBody
-    inc r2                    ; Incrementa o comprimento
-    add r1, r1, r2            ; Atualiza o vetor com o novo comprimento
-    storei r1, r0             ; Armazena a posição da cauda na última posição do vetor
-    store Length, r2          ; Armazena o comprimento da cobra
+    inc r2                    
+    add r1, r1, r2           
+    storei r1, r0            
+    store Length, r2      
 
     pop r2
     pop r1
     pop r0
     jmp MoveSnake_Skip
 
-; Função para limpar a tela
 ClearScreen:
     push r0
     push r1
 
     loadn r0, #1200           ; Define 1200 como o número de posições para limpar na tela
-    loadn r1, #' '            ; Caractere de espaço para limpar
+    loadn r1, #' '           
 
     ClearScreenLoop:
-        dec r0                ; Decrementa o contador
-        outchar r1, r0        ; Imprime espaço na posição atual
-        jnz ClearScreenLoop   ; Repete até que o contador chegue a zero
+        dec r0               
+        outchar r1, r0       
+        jnz ClearScreenLoop  
 
     pop r1
     pop r0
     rts
 
-; Função para imprimir a tela
 PrintScreen:
     push r0
     push r3
@@ -391,7 +376,6 @@ PrintScreen:
     pop r0
     rts
 
-; Função para imprimir uma string
 PrintStr:
     push r0
     push r1
@@ -419,21 +403,20 @@ PrintStr:
         pop r0
         rts
 
-; Função para imprimir a comida
 PrintFood:
     push r0
     push r1
     push r2
     push r3
 
-    loadn r1, #320            ; Caractere @ amarelo
-    loadn r2, #Food         ; Endereço do vetor de posição da comida
-    load r3, FoodIndex        ; Incremento para caminhar pelo vetor
+    loadn r1, #2624            ; Caractere @ vermelho
+    loadn r2, #Food         
+    load r3, FoodIndex     
     add r0, r2, r3            ; Calcula a posição da comida
-    loadi r2, r0              ; Carrega a posição da comida na tela
-    outchar r1, r2            ; Imprime a comida na posição calculada
+    loadi r2, r0              
+    outchar r1, r2          
 
-    inc r3                    ; Incrementa o índice para a próxima comida
+    inc r3                   
     store FoodIndex, r3
     store FoodPos, r2
 
@@ -479,7 +462,6 @@ DelayInitScreen:
     pop r0
     rts
 
-; Função para resetar o score
 ResetScore:
     loadn r0, #'0'
     store UnitScore, r0
@@ -488,10 +470,9 @@ ResetScore:
     call UpdateScoreDisplay
     rts
 
-; Função para atualizar o score
 UpdateScore:
-    load r0, UnitScore    ; Soma um ponto na unidade
-    loadn r1, #'9'           ; Se a unidade já for 9, então vai para somar na dezena
+    load r0, UnitScore   
+    loadn r1, #'9'          
     cmp r1, r0
     jeq AddTens
 
@@ -499,12 +480,12 @@ UpdateScore:
     store UnitScore, r0
     jmp UpdateScoreDisplay
 
-AddTens:                      ; Soma um na dezena
+AddTens:                   
     loadn r0, #'0'
     store UnitScore, r0
 
     load r0, TenScore
-    loadn r1, #'9'           ; Se a dezena já é 9, então vai somar na centena
+    loadn r1, #'9'       
     cmp r1, r0
     jeq AddHundreds
 
@@ -512,12 +493,12 @@ AddTens:                      ; Soma um na dezena
     store TenScore, r0
     jmp UpdateScoreDisplay
 
-AddHundreds:                  ; Soma um na centena
+AddHundreds:                
     loadn r0, #'0'
     store TenScore, r0
 
     load r0, HundredScore
-    loadn r1, #'9'           ; Se a centena é 9, então dá gameover
+    loadn r1, #'9'        
     cmp r1, r0
     jeq DeathScreen
 
@@ -525,7 +506,6 @@ AddHundreds:                  ; Soma um na centena
     store HundredScore, r0
     jmp UpdateScoreDisplay
 
-; Função para atualizar o display do score
 UpdateScoreDisplay:
     load r0, UnitScore
     loadn r1, #78
@@ -541,23 +521,21 @@ UpdateScoreDisplay:
 
     rts
 
-; Função para exibir o score
 DisplayScoreDeathScreen:
     load r0, UnitScore
-    loadn r1, #858           ; Posição para unidade na tela de morte
+    loadn r1, #858          
     outchar r0, r1
 
     load r0, TenScore
-    loadn r1, #857           ; Posição para dezena na tela de morte
+    loadn r1, #857         
     outchar r0, r1
 
     load r0, HundredScore
-    loadn r1, #856           ; Posição para centena na tela de morte
+    loadn r1, #856         
     outchar r0, r1
 
     rts
 
-;---------------------------------- TELA DO JOGO-------------------------------------------------------	
 TelaJogo0  : string "|======================================|"
 TelaJogo1  : string "|                                      |"
 TelaJogo2  : string "|                                      |"
