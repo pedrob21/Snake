@@ -1,1764 +1,1606 @@
-	; ------- TABELA DE CORES -------
-	; adicione ao caracter para Selecionar a cor correspondente
+jmp InitGame
 
 
-	; 0 branco							0000 0000
-	; 256 marrom						0001 0000
-	; 512 verde							0010 0000
-	; 768 oliva							0011 0000
-	; 1024 azul marinho					0100 0000
-	; 1280 roxo							0101 0000
-	; 1536 teal							0110 0000
-	; 1792 prata						0111 0000
-	; 2048 cinza						1000 0000
-	; 2304 vermelho						1001 0000
-	; 2560 lima							1010 0000
-	; 2816 amarelo						1011 0000
-	; 3072 azul							1100 0000
-	; 3328 rosa							1101 0000
-	; 3584 aqua							1110 0000
-	; 3840 branco						1111 0000
+; 0 branco							0000 0000
+; 256 marrom						0001 0000
+; 512 verde							0010 0000
+; 768 oliva							0011 0000
+; 1024 azul marinho					0100 0000
+; 1280 roxo							0101 0000
+; 1536 teal							0110 0000
+; 1792 prata						0111 0000
+; 2048 cinza						1000 0000
+; 2304 vermelho						1001 0000
+; 2560 lima							1010 0000
+; 2816 amarelo						1011 0000
+; 3072 azul							1100 0000
+; 3328 rosa							1101 0000
+; 3584 aqua							1110 0000
+; 3840 branco						1111 0000
 
-	jmp main
+SnakePos: var #1               ; Posição atual da cobra
+SnakeTailPos: var #1           ; Posição anterior da cobra
+FoodIndex: var #1              ; Índice para o array de posição da comida
+FoodPos: var #1                ; Posição atual da comida
+LastKey: var #1                ; Última tecla AWSD pressionada, usada para manter o movimento
+Length: var #1                 ; Comprimento da cobra
+SnakeBody: var #300            ; A	rmazena as posições do corpo da cobra
 
-
-	Pontuacao: var #1		; Pontuacao inicial, mostrada ao fim do jogo
-	Tecla: var #255			; Guarda valor de tecla quando pressionada
-	PosicaoCabeca: var #1	; Guarda posicao atual da cabeca
-	PosicaoRabo: var #1		; Guarda posicao atual do rabo
-	PosVetorRandom: var #1	; Guarda o indice do vetor na posicao atual
-	CaracterDaCobra: var #1	; Guarda o caracter da cobra com a cor
-	CaracterDaMaca: var #1	; Guarda o caracter da maca com a cor
-	MapaDoJogo: var #1200	; Guarda o mapa do jogo com a cobra
-	VetorRandom: var #1064	; Guarda valores random de onde a maca pode aparecer
-
-	main:
-		call ImprimeTelaApresentacao
-		call CarregaJogo
-
-	JogarNovamente:
-		call CarregaJogo
-		rts
-
-	FimDoJogo:
-		call ImprimeTelaAgradecimento
-		halt
-		
-	ImprimeTelaApresentacao:
-		loadn r0, #TelaApresentacao00 	; Carrega r0 com o endereco do vetor que contem a tela
-		loadn r1, #1792 				; Cor da impressao. Cor prata.
-		
-		call ImprimeTela
-		rts
-
-	ImprimeTelaInicialJogo:
-		loadn r0, #TelaJogoOficial00 	; Carrega r0 com o endereco do vetor que contem a tela
-		loadn r1, #1024				; Cor da impressao. Cor Azul
-		
-		
-		call ImprimeTela
-		rts
-
-	ImprimeTelaColidiu:
-		loadn r0, #TelaPosColisao00
-		loadn r1, #1792				; Cor da impressao. Cor prata
-		
-		call ImprimeTela
-		rts
-
-	ImprimeTelaAgradecimento:
-		loadn r0, #TelaAgradecimento00 	; Carrega r0 com o endereco do vetor que contem a tela
-		loadn r1, #1792				; Cor da impressao. Cor prata
-		
-		call ImprimeTela
-		rts
-		
-	ImprimeTela:
-		loadn r2, #0
-		loadn r3, #40
-		loadn r4, #41
-		loadn r5, #1200
-
-		ImprimeTelaLoop:
-			cmp r2, r5
-			jeq ImprimeTelaSai
-			call ImprimeStr
-			add r2, r3, r2
-			add r0,r4,r0
-			jmp ImprimeTelaLoop
-		ImprimeTelaSai:
-		rts
-
-	ImprimeStr:
-		push r0	; r0 = endereco onde comeca a mensagem
-		push r1	; r1 = cor da mensagem
-		push r2	; r2 = Posicao da tela que o primeiro caractere sera' impresso
-		push r3	; Guarda contexto: protege o r3 na pilha para ser usado na subrotina
-		push r4	; Guarda contexto: protege o r4 na pilha para ser usado na subrotina
-		
-		loadn r3, #'\0'	; Criterio de parada de impressao da string
-
-		ImprimeStrLoop:	
-			loadi r4, r0		; Carrega o conteudo do endereco de r0 em r4
-			cmp r4, r3			; Verifica se chegou ao final da string
-			jeq ImprimeStrSai
-			add r4, r1, r4		; Adiciona cor (r1) ao caracter a ser impresso
-			outchar r4, r2		; Imprime o caracter
-			inc r2				; Muda para proxima posicao da tela
-			inc r0				; Muda para o endereco da proxima letra
-			jmp ImprimeStrLoop
-		
-		ImprimeStrSai:	
-		pop r4
-		pop r3
-		pop r2
-		pop r1
-		pop r0
-		rts
-	;-------------------------------------------------------------------------------------------
+UnitScore: var #1
+TenScore: var #1
+HundredScore: var #1
 
 
-	CarregaJogo:
-		loadn r2, #13
-		inchar r1
-		cmp r1, r2
-		jne CarregaJogo
-		call ImprimeTelaInicialJogo	; Imprime a tela inicial para comecar o jogo
-		call IniciaVariaveis
-		call IniciaMapa				; Copia a tela inicial para o mapa
+static UnitScore, #'0'
+static TenScore, #'0'
+static HundredScore, #'0'
 
-		call JogoLoop
-		
-		rts
+Food: var #1200
 
-	JogoLoop:
-		call ValidaMovimento
-		jmp JogoLoop
-		
-	IniciaVariaveis:
-		loadn r0, #0				; Carrega r0 com o valor inicial de pontuacao
-		store Pontuacao, r0			; Zera a pontuacao
-		
-		loadn r4, #'w'     ; Inicializa com um valor padrão ('w')
-		store Tecla, r4    ; Armazena no local da variável
-		
-		loadn r0, #'s'
-		; TODO: Change color
-		loadn r1, #512
-		add r0, r1, r0				; Adiciona cor ao caracter da cobra
-		store CaracterDaCobra, r0	; Armazena o caracter da cobra
-		
-		loadn r0, #'s'
-		loadn r1, #2304
-		; TODO: Change color
-		add r0, r1, r0				; Adiciona cor ao caracter da cobra
-		store CaracterDaMaca, r0	; Armazena o caracter da maca
-		
-		loadn r0, #1
-		store PosVetorRandom, r0	; Guarda a posicao 1 no vetor
-		
-		loadn r3, #MapaDoJogo		; Primeira posicao do mapa
-		
-		loadn r0, #569				; Cabeca comeca na posicao 569 da tela
-		add r0, r3, r0				; r0 passa a guardar o valor de r3 deslocado em 569, posicao esta da cabeca no mapa
-		store PosicaoCabeca, r0		; Inicia variavel com a posicao da cabeca
-		
-		loadn r1, #567				; Rabo comeca na posicao 567 da tela
-		add r1, r3, r1				; r1 passa a guardar o valor de r3 deslocado em 567, posicao esta do rabo no mapa
-		store PosicaoRabo, r1		; Inicia variavel com a posicao da cauda
-		
-		rts
-		
-	IniciaMapa:
-		push r0	; Guarda contexto: posicao da cabeca
-		push r1	; Guarda contexto: posicao do rabo
-		push r2	; Guarda contexto: direcao que a cobra comeca
-		push r3
-		push r4
+InitGame:
+    MenuScreen:
+        call ClearScreen      
+        loadn r1, #TelaApresentacao00 
+        loadn r2, #1280        ; Cor roxa
+        call PrintScreen     
 
-		; Nao precisa salvar contexto
-		loadn r0, #TelaJogoOficial00	; Posicao inicial do que sera copiado
-		loadn r1, #MapaDoJogo		; Posicao inicial para onde sera copiado
-		loadn r2, #41				; Incremento da Tela
-		loadn r3, #40				; Incremento do Mapa
-		loadn r4, #30				; Numero de iteracoes
-		
-		IniciaMapaLoop:
-			call CopiaLinha
-			add r0, r2, r0			; Pula para proxima string
-			add r1, r3, r1			; Pula para proxima linha do mapa
-			dec r4
-			jnz IniciaMapaLoop
-		
-		load r0, CaracterDaMaca		; Carrega o caracter da maca com a cor a ser impressa
-		loadn r1, #589				; Posicao da maca
-		loadn r2, #MapaDoJogo		; Carrega posicao inicial do mapa
-		add r2, r1, r2				; Desloca posicao inicial do mapa para a maca
-		
-		outchar r0, r1
-		storei r2, r0				; Guarda o caracter da maca na posicao dela no mapa para identifica-la
-		
-		load r0, CaracterDaCobra	; Carrega o caracter da cobra com a cor a ser impressa
-		loadn r1, #567				; Posicao do rabo
-		loadn r2, #MapaDoJogo		; Carrega posicao inicial do mapa
-		loadn r3, #'l'				; Direcao que a cobra comeca
-		add r2, r1, r2				; Desloca posicao inicial do mapa para o rabo
-		
-		outchar r0, r1				; Imprime rabo na posicao 567
-		storei r2, r3				; Guarda na posicao 567 do mapa que a cobra segue para Direita
-		inc r1
-		inc r2
-		
-		outchar r0, r1				; Imprime corpo na posicao 568
-		storei r2, r3				; Guarda na posicao 568 do mapa que a cobra segue para Direita
-		inc r1
-		inc r2
-		
-		outchar r0, r1				; imprime cabeca na posicao 569
-		storei r2, r3				; Guarda na posicao 569 do mapa que a cobra segue para Direita
-		
-		pop r4
-		pop r3
-		pop r2	; Resgata contexto
-		pop r1	; Resgata contexto
-		pop r0	; Resgata contexto
-		rts 	; Retorno da funcao CopiaMapa
-		
-	CopiaLinha:
-		push r0 ; Salva contexto: Guarda posicao da tela
-		push r1 ; Salva contexto: Guarda posicao do mapa
-		push r2 ; Salva contexto: Guarda incremento da tela
-		push r3 ; Salva contexto: Guarda incremento do mapa
-		
-		loadn r3, #40	; Numero de iteracoes
-		
-		CopiaLinhaLoop:
-			loadi r2, r0	; Copia conteudo do END de r0 para r2
-			storei r1, r2 	; Copia conteudo do r2 para END de r1
-			inc r0			; Incremente END para proxima informacao
-			inc r1			; Incremente END para proxima posicao 'vazia'
-			dec r3			; Decrementa contador
-			jnz CopiaLinhaLoop
-		
-		pop r3	; Resgata contexto
-		pop r2
-		pop r1
-		pop r0
-		rts
+    ; Loop do menu
+    MenuLoop:
+        loadn r3, #13        
+        inchar r4            
+        cmp r4, r3            
+        jeq PreGameScreen         
+        jmp MenuLoop         
 
-	ValidaMovimento:
-		call LeTeclado
-		call ChecaColisao
-		rts
+StartGame:
+    call ClearScreen          
+    loadn r1, #TelaJogo0      
+    loadn r2, #1536            ; Cor azul claro
+    call PrintScreen           ; Imprime a cena do jogo na cor azul claro
+    loadn r5, #0               
+    store Length, r5
+    loadn r0, #700            
+    store SnakePos, r0         ; Armazena a posição na variável
+    dec r0
+    store SnakeBody, r0        ; Posição inicial do corpo da cobra
+    loadn r0, #'d'             
+    store LastKey, r0          ; Armazena em LastKey para manter o movimento a cada ciclo
+    call PrintFood             
+    call ResetScore            
 
-	LeTeclado:
-		; Salva registradores usados
-		push r4
-		push r6
-		push r7
+GameLoop:
+    call MoveSnake             
+    call DrawSnake          
+    call Delay               
+    jmp GameLoop           
 
-	LeTecladoLoop:
-		inchar r4             ; Lê o teclado
+DeathScreen:
+    call ClearScreen         
+    loadn r1, #TelaPosColisao00 ; Endereço onde a cena do menu de morte começa
+    loadn r2, #2304            ; Cor vermelha
+    call PrintScreen          
+    call DisplayScoreDeathScreen
 
-		; Verifica se a tecla pressionada é válida
-		loadn r6, #'w'
-		cmp r4, r6
-		jeq MovimentoValido
-		loadn r6, #'a'
-		cmp r4, r6
-		jeq MovimentoValido
-		loadn r6, #'s'
-		cmp r4, r6
-		jeq MovimentoValido
-		loadn r6, #'d'
-		cmp r4, r6
-		jeq MovimentoValido
+DeathLoop:
+    loadn r2, #121             ; Código ASCII da tecla 'y'
+    loadn r3, #110             ; Código ASCII da tecla 'n'
+    inchar r4                
+    cmp r4, r3                 ; Verifica se é 'n'
+    jeq endGame               
+    cmp r4, r2                 ; Verifica se é 'y'
+    jeq PreGameScreen         
+    jmp DeathLoop            
 
-		jmp LeTecladoLoop      ; Se nenhuma tecla for pressionada, continua no loop
+PreGameScreen:
+    call ClearScreen         
+    loadn r1, #TelaPreJogo00   ; Endereço da tela de pré-jogo
+    loadn r2, #1280           
+    call PrintScreen         
+    call DelayInitScreen    
+    jmp StartGame              
 
-		
-	MovimentoValido:
-		store Tecla, r4       ; Guarda a tecla pressionada como o último movimento
+endGame:
+    call ClearScreen        
+    call printThankYouScreen
+    halt
 
-		; Restaura registradores e retorna
-		pop r7
-		pop r6
-		pop r4
-		jmp ChecaColisao
-			
-	ChecaColisao:
-    push r7
+printThankYouScreen:
+    loadn r1, #TelaAgradecimento00
+    loadn r2, #1280                ; Cor da impressão. Cor prata
+    call PrintScreen
+    rts
+
+; Função para desenhar a cobra
+DrawSnake:
+    push r0   
+    push r1
+    push r2
+    push r3
+    push r4
+    push r5
     push r6
+
+    loadn r1, #368            ; Usa o caractere 'p' para representar a cobra
+    loadn r5, #' '   	       ; Também carrega ' ' para apagar o corpo
+    load r0, SnakePos         
+    loadn r2, #SnakeBody      
+    loadn r4, #0             
+    load r6, Length
+
+    DrawSnakeLoop:
+        loadi r3, r2           
+        outchar r1, r0        
+        outchar r5, r3         ; Apaga a posição anterior
+        loadn r1, #2409        ; Define o corpo com o caractere 'i' vermelho
+        storei r2, r0          ; Armazena a posição atual no vetor SnakeBody
+        mov r0, r3            
+        cmp r4, r6            
+        jeq DrawSnakeEnd     
+        inc r4
+        inc r2
+        jmp DrawSnakeLoop
+
+    DrawSnakeEnd:
+        store SnakeTailPos, r3 ; Armazena a posição da cauda
+        pop r6                
+        pop r5
+        pop r4
+        pop r3
+        pop r2
+        pop r1
+        pop r0
+        rts
+
+; Função para verificar colisão
+CheckCollision:
     push r0
+    push r1
+    push r2
+    push r3
+    push r4
+    push r5
 
-    load r7, PosicaoCabeca  ; Posição atual da cabeça
-    load r5, Tecla          ; Direção da tecla pressionada
+    load r0, SnakePos         ; Carrega a posição da cobra em R0
+    loadn r1, #SnakeBody      ; Carrega o endereço do vetor dos corpos da cobra
+    loadn r2, #0              
+    load r4, Length           
+    loadn r5, #'*'            ; Carrega '*' para paredes
 
-    call MoveCobra
+    CollisionLoop:
+        cmp r2, r4           
+        jeq CollisionEnd
+        loadi r3, r1          
+        cmp r0, r3           
+        jeq DeathScreen       
+        inc r2              
+        inc r1            
+        jmp CollisionLoop
 
-    store PosicaoCabeca, r7  ; Atualiza variável com nova posição da cabeça
+    CollisionEnd:
+        pop r5
+        pop r4
+        pop r3
+        pop r2
+        pop r1
+        pop r0
+        rts
 
-    ; Checa se a posição é válida
-    loadi r6, r7             ; Carrega valor do mapa na nova posição
-    loadn r7, #' '           ; Valor de espaço vazio
-    cmp r6, r7               ; Comparação
-    jmp NaoColidiu           ; Não colidiu
+MoveSnake:
+    push r0
+    push r1
+    push r2
 
-    ; Caso contrário, é colisão
-    pop r7
-    pop r6
+    call RecalculateSnakePos  
+    load r0, SnakePos         ;
+    load r2, FoodPos         
+    cmp r0, r2
+    jeq IncreaseSnake       
+    call CheckCollision  
+
+    MoveSnake_Skip:
+        pop r2
+        pop r1
+        pop r0
+        rts
+
+RecalculateSnakePos:
+    push r0
+    push r1
+    push r2
+    push r3
+    push r4
+    push r5
+
+    load r0, SnakePos        
+    inchar r1                 
+
+    loadn r2, #'a'
+    cmp r1, r2
+    jeq MoveLeft
+    ; Verifica se a tecla pressionada foi 'd'
+    loadn r2, #'d'
+    cmp r1, r2
+    jeq MoveRight
+    ; Verifica se a tecla pressionada foi 'w'
+    loadn r2, #'w'
+    cmp r1, r2
+    jeq MoveUp
+    ; Verifica se a tecla pressionada foi 's'
+    loadn r2, #'s'
+    cmp r1, r2
+    jeq MoveDown
+
+    ; Mantém o movimento na mesma direção
+    loadn r2, #'a'
+    load r1, LastKey
+    cmp r1, r2
+    jeq MoveLeft
+    loadn r2, #'d'
+    load r1, LastKey
+    cmp r1, r2
+    jeq MoveRight
+    loadn r2, #'w'
+    load r1, LastKey
+    cmp r1, r2
+    jeq MoveUp
+    loadn r2, #'s'
+    load r1, LastKey
+    cmp r1, r2
+    jeq MoveDown
+
+    RecalculatePos_End:
+        store SnakePos, r0   
+        pop r5
+        pop r4
+        pop r3
+        pop r2
+        pop r1
+        pop r0
+        rts
+
+    MoveLeft:
+        loadn r1, #40
+        loadn r2, #1
+        mod r1, r0, r1        
+        cmp r1, r2             
+        jeq DeathScreen        
+        load r4, LastKey
+        loadn r5, #'d'
+        cmp r4, r5
+        jeq MoveRight
+        dec r0                 
+        loadn r3, #'a'
+        store LastKey, r3
+        jmp RecalculatePos_End
+
+    MoveRight:
+        loadn r1, #40
+        loadn r2, #38
+        mod r1, r0, r1        
+        cmp r1, r2             
+        jeq DeathScreen      
+        load r4, LastKey
+        loadn r5, #'a'
+        cmp r4, r5
+        jeq MoveLeft
+        inc r0                
+        loadn r3, #'d'
+        store LastKey, r3
+        jmp RecalculatePos_End
+
+    MoveUp:
+        loadn r1, #160
+        cmp r0, r1            
+        jle DeathScreen        
+        load r4, LastKey
+        loadn r5, #'s'
+        cmp r4, r5
+        jeq MoveDown
+        loadn r1, #40
+        sub r0, r0, r1       
+        loadn r3, #'w'
+        store LastKey, r3
+        jmp RecalculatePos_End
+
+    MoveDown:
+        loadn r1, #1119
+        cmp r0, r1             
+        jgr DeathScreen        
+        load r4, LastKey
+        loadn r5, #'w'
+        cmp r4, r5
+        jeq MoveUp
+        loadn r1, #40
+        add r0, r0, r1        
+        loadn r3, #'s'
+        store LastKey, r3
+        jmp RecalculatePos_End
+
+IncreaseSnake:
+    push r0
+    push r1
+    push r2
+
+    call PrintFood            ; Se a cobra come a comida, imprime outra
+    call UpdateScore         
+    load r0, SnakeTailPos     
+    load r2, Length          
+    loadn r1, #SnakeBody
+    inc r2                    
+    add r1, r1, r2           
+    storei r1, r0            
+    store Length, r2      
+
+    pop r2
+    pop r1
     pop r0
-    jmp Colidiu		; Cobra colidiu. Nao e call pois e rotina de fim de jogo
-			
-	NaoColidiu:					; Encolhe o rabo
-		load r7, PosicaoRabo	; Coloca no r7 a endereco do rabo do mapa
-		loadn r6, #MapaDoJogo	; Coloca no r6 a endereco 0 do mapa
-		sub r7, r7, r6			; Subtrai do end do rabo, o end no inicio do mapa, dando a posicao do rabo na tela
-		loadn r6, #' '			; Caracter para apagar o ultimo gomo do rabo
-		outchar r6, r7			; Apaga o rabo da tela
-	; Ja apagou o rabo da tela, nao precisa mais do que esta no r7
-	
-		load r7, PosicaoRabo	; Carrega o end do rabo no mapa
-		loadi r5, r7			; Coloca no r5 o conteudo que tem na posicao do rabo, que e a direcao que o rabo deve seguir
-		storei r7, r6			; apaga informacao no mapa. r6 contem ' '
-		; call MoveCobra			; Atualiza rabo
-		store PosicaoRabo, r7	; Guarda a nova posicao do rabo na variavel
-		load r1, PosicaoRabo	; Atualia registrador que guarda posicao do rabo
-	; Mexeu o rabo, falta mexer a cabeca
-		jmp ValidaMovimento
-		
-	MoveCobra:
-		; r5 contém a direção que deve seguir ('w', 'a', 's', ou 'd')
-		; r7 contém a posição atual da cabeça ou do rabo que será atualizada
-		push r6
-		push r5
+    jmp MoveSnake_Skip
 
-		load r5, Tecla
-		MoveCobra_case_W:
-			loadn r6, #'w'		; Movimento para cima
-			cmp r5, r6			; Verifica se o movimento é para cima
-			jne MoveCobra_case_S
-			
-			loadn r6, #40		; Para subir na tela, subtrai-se 40 da posição
-			sub r7, r7, r6		; Atualiza r7 com a nova posição
-			jmp MoveCobraFim
-		
-		MoveCobra_case_S:
-			loadn r6, #'s'		; Movimento para baixo
-			cmp r5, r6			; Verifica se o movimento é para baixo
-			jne MoveCobra_case_A
-			
-			loadn r6, #40		; Para descer na tela, soma-se 40 na posição
-			add r7, r7, r6		; Atualiza r7 com a nova posição
-			jmp MoveCobraFim
-		
-		MoveCobra_case_A:
-			loadn r6, #'a'		; Movimento para a esquerda
-			cmp r5, r6			; Verifica se o movimento é para a esquerda
-			jne MoveCobra_case_D
-			
-			loadn r6, #1		; Para virar à esquerda, subtrai-se 1 da posição
-			sub r7, r7, r6		; Atualiza r7 com a nova posição
-			jmp MoveCobraFim
-		
-		MoveCobra_case_D:
-			loadn r6, #'d'		; Movimento para a direita
-			cmp r5, r6			; Verifica se o movimento é para a direita
-			jne MoveCobraFim   ; Se nenhuma direção for válida, salta para o erro
-			
-			loadn r6, #1		; Para virar à direita, soma-se 1 na posição
-			add r7, r7, r6		; Atualiza r7 com a nova posição
-			jmp MoveCobraFim
-		
-		MoveCobraFim:
-		pop r6
-		pop r5
-		rts
+ClearScreen:
+    push r0
+    push r1
 
-	Colidiu:
-	push r1
-	push r2
-	push r0
+    loadn r0, #1200           ; Define 1200 como o número de posições para limpar na tela
+    loadn r1, #' '           
 
-		call ImprimeTelaEmBranco
-		call ImprimeTelaColidiu
-		call ImprimeScore
-		
-		loadn r1, #'y'		; resposta Yes
-		loadn r2, #'n'		; resposta No
-		ColidiuLoop:
-			inchar r0		; recebe resposta
-			cmp r0, r1
-			jeq JogarNovamente
-			cmp r0, r2
-			jeq FimDoJogo
-			
-			jmp ColidiuLoop
-	pop r1
-	pop r2
-	pop r0
+    ClearScreenLoop:
+        dec r0               
+        outchar r1, r0       
+        jnz ClearScreenLoop  
 
-	ImprimeScore:
-		loadn r0, #584		; Primeira posicao do score
-		load r1, Pontuacao
-		loadn r2, #1000		; Para pegar primeiro digito da pontuacao
-		div r3, r1, r2		; Se pontuacao for mais de 1000 da 1, se nao da 0
+    pop r1
+    pop r0
+    rts
 
-		call BuscaCaracter
-		outchar r4, r0
-		
-		inc r0
-		load r1, Pontuacao
-		
-		loadn r2, #1000		; Para eliminar o primeiro digito
-		mod r1, r1, r2
-		
-		loadn r2, #100		; Para pegar o segundo digito
-		div r3, r1, r2		; Se pontuacao for mais de 1000 da 1, se nao da 0
+PrintScreen:
+    push r0
+    push r3
+    push r4
+    push r5
 
-		call BuscaCaracter
-		outchar r4, r0
-		
-		inc r0
-		load r1, Pontuacao
-		
-		loadn r2, #100		; Para eliminar o primeiro digito
-		mod r1, r1, r2
-		
-		loadn r2, #10		; Para pegar o segundo digito
-		div r3, r1, r2		; Se pontuacao for mais de 1000 da 1, se nao da 0
+    loadn r0, #0              ; Posição inicial deve ser o começo da tela
+    loadn r3, #40             ; Passa para a próxima linha
+    loadn r4, #41             ; Incremento do ponteiro
+    loadn r5, #1200           ; Limite da tela
 
-		call BuscaCaracter
-		outchar r4, r0
-		
-		inc r0
-		load r1, Pontuacao
-		
-		loadn r2, #10		; Para eliminar o primeiro digito
-		mod r1, r1, r2
-		
-		loadn r2, #1		; Para pegar o segundo digito
-		div r3, r1, r2		; Se pontuacao for mais de 1000 da 1, se nao da 0
+    PrintScreenLoop:
+        call PrintStr         ; Chama a função para imprimir cada pixel
+        add r0, r0, r3        ; Incrementa a posição para a próxima linha na tela
+        add r1, r1, r4        ; Incrementa o ponteiro para a próxima linha na memória
+        cmp r0, r5            ; Verifica se o fim da tela foi alcançado
+        jne PrintScreenLoop
 
-		call BuscaCaracter
-		outchar r4, r0
-		
-		rts
-		
-	BuscaCaracter:
-		BuscaCase_0:
-			loadn r4, #0
-			cmp r3, r4
-			jne BuscaCase_1
-			loadn r4, #'0'
-			rts
-			
-		BuscaCase_1:
-			loadn r4, #1
-			cmp r3, r4
-			jne BuscaCase_2
-			loadn r4, #'1'
-			rts
-		
-		BuscaCase_2:
-			loadn r4, #2
-			cmp r3, r4
-			jne BuscaCase_3
-			loadn r4, #'2'
-			rts
-		
-		BuscaCase_3:
-			loadn r4, #3
-			cmp r3, r4
-			jne BuscaCase_4
-			loadn r4, #'3'
-			rts
-		
-		BuscaCase_4:
-			loadn r4, #4
-			cmp r3, r4
-			jne BuscaCase_5
-			loadn r4, #'4'
-			rts
-		
-		BuscaCase_5:
-			loadn r4, #5
-			cmp r3, r4
-			jne BuscaCase_6
-			loadn r4, #'5'
-			rts
-			
-		BuscaCase_6:
-			loadn r4, #6
-			cmp r3, r4
-			jne BuscaCase_7
-			loadn r4, #'6'
-			rts
-			
-		BuscaCase_7:
-			loadn r4, #7
-			cmp r3, r4
-			jne BuscaCase_8
-			loadn r4, #'7'
-			rts
-			
-		BuscaCase_8:
-			loadn r4, #8
-			cmp r3, r4
-			jne BuscaCase_9
-			loadn r4, #'8'
-			rts
+    pop r5
+    pop r4
+    pop r3
+    pop r0
+    rts
 
-		BuscaCase_9:
-			loadn r4, #'9'	; Se chegou aqui como certeza eh esse
-			rts
+PrintStr:
+    push r0
+    push r1
+    push r2
+    push r3
+    push r4
 
-	ImprimeTelaEmBranco:
-		push r0 ; Salva contexto
-		push r1 ; Salva contexto
-		push r2 ; Salva contexto
-		
-		loadn r0, #MapaDoJogo	; Inicio
-		loadn r1, #1200
-		loadn r2, #0
-		add r1, r1, r0	; fim do mapa
-		
-		
-		ImprimeTelaEmBrancoLoop:
-			loadi r3, r0
-			outchar r3, r2
-			inc r0
-			inc r2
-			cmp r0, r1
-			jne ImprimeTelaEmBrancoLoop
+    loadn r3, #'\0'           ; Critério de parada
 
-		pop r2
-		pop r1
-		pop r0
-		rts
+    PrintStrLoop:
+        loadi r4, r1          ; Obtém o primeiro caractere
+        cmp r4, r3            ; Verifica o critério de parada
+        jeq PrintStrExit
+        add r4, r2, r4        ; Adiciona a cor
+        outchar r4, r0        ; Imprime o caractere na tela
+        inc r0                ; Incrementa a posição na tela
+        inc r1                ; Incrementa o ponteiro da string
+        jmp PrintStrLoop
+
+    PrintStrExit:
+        pop r4
+        pop r3
+        pop r2
+        pop r1
+        pop r0
+        rts
+
+PrintFood:
+    push r0
+    push r1
+    push r2
+    push r3
+
+    loadn r1, #2624            ; Caractere @ vermelho
+    loadn r2, #Food         
+    load r3, FoodIndex     
+    add r0, r2, r3            ; Calcula a posição da comida
+    loadi r2, r0              
+    outchar r1, r2          
+
+    inc r3                   
+    store FoodIndex, r3
+    store FoodPos, r2
+
+    pop r3
+    pop r2
+    pop r1
+    pop r0
+    rts
 
 
-    TelaApresentacao00: string "                                        "
-    TelaApresentacao01: string "                                        "
-    TelaApresentacao02: string "                                        "
-    TelaApresentacao03: string "                                        "
-    TelaApresentacao04: string "                                        "
-    TelaApresentacao05: string "                                        "
-    TelaApresentacao06: string "            JOGO CRIADO POR:            "
-    TelaApresentacao07: string "                                        "
-    TelaApresentacao08: string "       DAVI                             "
-    TelaApresentacao09: string "       LUCAS                            "
-    TelaApresentacao10: string "       PEDRO                            "
-    TelaApresentacao11: string "       MARCEL HENRIQUE R BATISTA        "
-    TelaApresentacao12: string "                                        "
-    TelaApresentacao13: string "                                        "
-    TelaApresentacao14: string "      ESTE JOGO E O CLASSICO SNAKE      "
-    TelaApresentacao15: string "                                        "
-    TelaApresentacao16: string "    OS COMANDO BASICOS DO JOGO SAO:     "
-    TelaApresentacao17: string "                                        "
-    TelaApresentacao18: string "        W  - MOVE PARA CIMA             "
-    TelaApresentacao19: string "        S  - MOVE PARA BAIXO            "
-    TelaApresentacao20: string "        A  - MOVE PARA ESQUERDA         "
-    TelaApresentacao21: string "        D  - MOVE PARA DIREITA          "
-    TelaApresentacao22: string "                                        "
-    TelaApresentacao23: string "                                        "
-    TelaApresentacao24: string "            ESPERO QUE GOSTE            "
-    TelaApresentacao25: string "                                        "
-    TelaApresentacao26: string "               BOM JOGO!                "
-    TelaApresentacao27: string "                                        "
-    TelaApresentacao28: string "  PRESSIONE QUALQUER TECLA PARA COMECAR "
+Delay:
+    push r0
+    push r1
+
+    loadn r1, #165            ; Define o valor inicial do contador externo
+    DelayLoop2:
+        loadn r0, #400       ; Define o valor inicial do contador interno
+    DelayLoop:
+        dec r0                ; Decrementa o contador interno
+        jnz DelayLoop         ; Se não zero, repete o loop interno
+        dec r1                ; Decrementa o contador externo
+        jnz DelayLoop2        ; Se não zero, repete o loop externo
+
+    pop r1
+    pop r0
+    rts
+
+
+DelayInitScreen:
+    push r0
+    push r1
+
+    loadn r1, #1000            ; Define o valor inicial do contador externo
+    DelayInitLoop2:
+        loadn r0, #1200       ; Define o valor inicial do contador interno
+    DelayInitLoop:
+        dec r0                ; Decrementa o contador interno
+        jnz DelayInitLoop         ; Se não zero, repete o loop interno
+        dec r1                ; Decrementa o contador externo
+        jnz DelayInitLoop2        ; Se não zero, repete o loop externo
+
+    pop r1
+    pop r0
+    rts
+
+ResetScore:
+    loadn r0, #'0'
+    store UnitScore, r0
+    store TenScore, r0
+    store HundredScore, r0
+    call UpdateScoreDisplay
+    rts
+
+UpdateScore:
+    load r0, UnitScore   
+    loadn r1, #'9'          
+    cmp r1, r0
+    jeq AddTens
+
+    inc r0
+    store UnitScore, r0
+    jmp UpdateScoreDisplay
+
+AddTens:                   
+    loadn r0, #'0'
+    store UnitScore, r0
+
+    load r0, TenScore
+    loadn r1, #'9'       
+    cmp r1, r0
+    jeq AddHundreds
+
+    inc r0
+    store TenScore, r0
+    jmp UpdateScoreDisplay
+
+AddHundreds:                
+    loadn r0, #'0'
+    store TenScore, r0
+
+    load r0, HundredScore
+    loadn r1, #'9'        
+    cmp r1, r0
+    jeq DeathScreen
+
+    inc r0
+    store HundredScore, r0
+    jmp UpdateScoreDisplay
+
+UpdateScoreDisplay:
+    load r0, UnitScore
+    loadn r1, #78
+    outchar r0, r1
+
+    load r0, TenScore
+    loadn r1, #77
+    outchar r0, r1
+
+    load r0, HundredScore
+    loadn r1, #76
+    outchar r0, r1
+
+    rts
+
+DisplayScoreDeathScreen:
+    load r0, UnitScore
+    loadn r1, #858          
+    outchar r0, r1
+
+    load r0, TenScore
+    loadn r1, #857         
+    outchar r0, r1
+
+    load r0, HundredScore
+    loadn r1, #856         
+    outchar r0, r1
+
+    rts
+
+TelaJogo0  : string "|======================================|"
+TelaJogo1  : string "|                                      |"
+TelaJogo2  : string "|                                      |"
+TelaJogo4  : string "|                                      |"
+TelaJogo5  : string "|                                      |"
+TelaJogo6  : string "|                                      |"
+TelaJogo3  : string "|                                      |"
+TelaJogo7  : string "|                                      |"
+TelaJogo8  : string "|                                      |"
+TelaJogo9  : string "|                                      |"
+TelaJogo10 : string "|                                      |"
+TelaJogo11 : string "|                                      |"
+TelaJogo12 : string "|                                      |"
+TelaJogo13 : string "|                                      |"
+TelaJogo14 : string "|                                      |"
+TelaJogo15 : string "|                                      |"
+TelaJogo16 : string "|                                      |"
+TelaJogo17 : string "|                                      |"
+TelaJogo18 : string "|                                      |"
+TelaJogo19 : string "|                                      |"
+TelaJogo20 : string "|                                      |"
+TelaJogo21 : string "|                                      |"
+TelaJogo22 : string "|                                      |"
+TelaJogo23 : string "|                                      |"
+TelaJogo24 : string "|                                      |"
+TelaJogo25 : string "|                                      |"
+TelaJogo26 : string "|                                      |"
+TelaJogo27 : string "|                                      |"
+TelaJogo28 : string "|                                      |"
+TelaJogo29 : string "|======================================|"
+
+TelaApresentacao00: string "                                        "
+TelaApresentacao01: string "                                        "
+TelaApresentacao02: string "                                        "
+TelaApresentacao03: string "                                        "
+TelaApresentacao04: string "                                        "
+TelaApresentacao05: string "                                        "
+TelaApresentacao06: string "            JOGO CRIADO POR:            "
+TelaApresentacao07: string "                                        "
+TelaApresentacao08: string "       DAVI                             "
+TelaApresentacao09: string "       LUCAS                            "
+TelaApresentacao10: string "       PEDRO                            "
+TelaApresentacao11: string "       MARCEL HENRIQUE R BATISTA        "
+TelaApresentacao12: string "                                        "
+TelaApresentacao13: string "                                        "
+TelaApresentacao14: string "      ESTE JOGO E O CLASSICO SNAKE      "
+TelaApresentacao15: string "                                        "
+TelaApresentacao16: string "    OS COMANDO BASICOS DO JOGO SAO:     "
+TelaApresentacao17: string "                                        "
+TelaApresentacao18: string "        W  - MOVE PARA CIMA             "
+TelaApresentacao19: string "        S  - MOVE PARA BAIXO            "
+TelaApresentacao20: string "        A  - MOVE PARA ESQUERDA         "
+TelaApresentacao21: string "        D  - MOVE PARA DIREITA          "
+TelaApresentacao22: string "                                        "
+TelaApresentacao23: string "                                        "
+TelaApresentacao24: string "            ESPERO QUE GOSTE            "
+TelaApresentacao25: string "                                        "
+TelaApresentacao26: string "               BOM JOGO!                "
+TelaApresentacao27: string "                                        "
+TelaApresentacao28: string "  PRESSIONE QUALQUER TECLA PARA COMECAR "
 TelaApresentacao29: string "                                        "
 
-	TelaJogo00: string "----------------------------------------"
-	TelaJogo01: string "|                                      |"
-	TelaJogo02: string "|                                      |"
-	TelaJogo03: string "|                                      |"
-	TelaJogo04: string "|                                      |"
-	TelaJogo05: string "|                                      |"
-	TelaJogo06: string "|                                      |"
-	TelaJogo07: string "|                                      |"
-	TelaJogo08: string "|                                      |"
-	TelaJogo09: string "|            OLHA a Jiboia             |"
-	TelaJogo10: string "|                                      |"
-	TelaJogo11: string "|                                      |"
-	TelaJogo12: string "|                                      |"
-	TelaJogo13: string "|                                      |"
-	TelaJogo14: string "|                                      |"
-	TelaJogo15: string "|                                      |"
-	TelaJogo16: string "|                                      |"
-	TelaJogo17: string "|                                      |"
-	TelaJogo18: string "|                                      |"
-	TelaJogo19: string "|                                      |"
-	TelaJogo20: string "|                                      |"
-	TelaJogo21: string "|                                      |"
-	TelaJogo22: string "|                                      |"
-	TelaJogo23: string "|                                      |"
-	TelaJogo24: string "|                                      |"
-	TelaJogo25: string "|                                      |"
-	TelaJogo26: string "|                                      |"
-	TelaJogo27: string "|                                      |"
-	TelaJogo28: string "|                                      |"
-	TelaJogo29: string "----------------------------------------"
 
+TelaPosColisao00: string "                                        "
+TelaPosColisao01: string "                                        "
+TelaPosColisao02: string "                                        "
+TelaPosColisao03: string "                                        "
+TelaPosColisao04: string "                                        "
+TelaPosColisao05: string "                                        "
+TelaPosColisao06: string "                                        "
+TelaPosColisao07: string "                                        "
+TelaPosColisao08: string "                                        "
+TelaPosColisao09: string "                                        "
+TelaPosColisao10: string "                                        "
+TelaPosColisao11: string "                                        "
+TelaPosColisao12: string "         MUITO RUIM, VOCE COLIDIU       "
+TelaPosColisao13: string "                                        "
+TelaPosColisao14: string "                                        "
+TelaPosColisao15: string "                                        "
+TelaPosColisao16: string "     DESEJA JOGAR NOVAMENTE?  <Y/N>     "
+TelaPosColisao17: string "                                        "
+TelaPosColisao18: string "                                        "
+TelaPosColisao19: string "                                        "
+TelaPosColisao20: string "                                        "
+TelaPosColisao21: string "     VOCE COMEU:    Macas               "
+TelaPosColisao22: string "                                        "
+TelaPosColisao23: string "                                        "
+TelaPosColisao24: string "                                        "
+TelaPosColisao25: string "                                        "
+TelaPosColisao26: string "                                        "
+TelaPosColisao27: string "                                        "
+TelaPosColisao28: string "                                        "
+TelaPosColisao29: string "                                        "
 
+TelaAgradecimento00: string "                                        "
+TelaAgradecimento01: string "                                        "
+TelaAgradecimento02: string "                                        "
+TelaAgradecimento03: string "                                        "
+TelaAgradecimento04: string "                                        "
+TelaAgradecimento05: string "                                        "
+TelaAgradecimento06: string "                                        "
+TelaAgradecimento07: string "                                        "
+TelaAgradecimento08: string "                                        "
+TelaAgradecimento09: string "                                        "
+TelaAgradecimento10: string "                                        "
+TelaAgradecimento11: string "                                        "
+TelaAgradecimento12: string "        MUITO OBRIGADO POR JOGAR        "
+TelaAgradecimento13: string "                                        "
+TelaAgradecimento14: string "        ESPERO QUE TENHA GOSTADO        "
+TelaAgradecimento15: string "                                        "
+TelaAgradecimento16: string "                                        "
+TelaAgradecimento17: string "                                        "
+TelaAgradecimento18: string "                                        "
+TelaAgradecimento19: string "                                        "
+TelaAgradecimento20: string "                                        "
+TelaAgradecimento21: string "                                        "
+TelaAgradecimento22: string "                                        "
+TelaAgradecimento23: string "                                        "
+TelaAgradecimento24: string "                                        "
+TelaAgradecimento25: string "                                        "
+TelaAgradecimento26: string "                                        "
+TelaAgradecimento27: string "                                        "
+TelaAgradecimento28: string "                                        "
+TelaAgradecimento29: string "                                        "
 
-	TelaJogoOficial00: string "----------------------------------------"
-	TelaJogoOficial01: string "|                                      |"
-	TelaJogoOficial02: string "|                                      |"
-	TelaJogoOficial03: string "|                                      |"
-	TelaJogoOficial04: string "|                                      |"
-	TelaJogoOficial05: string "|                                      |"
-	TelaJogoOficial06: string "|                                      |"
-	TelaJogoOficial07: string "|                                      |"
-	TelaJogoOficial08: string "|                                      |"
-	TelaJogoOficial09: string "|                                      |"
-	TelaJogoOficial10: string "|                                      |"
-	TelaJogoOficial11: string "|                                      |"
-	TelaJogoOficial12: string "|                                      |"
-	TelaJogoOficial13: string "|                                      |"
-	TelaJogoOficial14: string "|                                      |"
-	TelaJogoOficial15: string "|                                      |"
-	TelaJogoOficial16: string "|                                      |"
-	TelaJogoOficial17: string "|                                      |"
-	TelaJogoOficial18: string "|                                      |"
-	TelaJogoOficial19: string "|                                      |"
-	TelaJogoOficial20: string "|                                      |"
-	TelaJogoOficial21: string "|                                      |"
-	TelaJogoOficial22: string "|                                      |"
-	TelaJogoOficial23: string "|                                      |"
-	TelaJogoOficial24: string "|                                      |"
-	TelaJogoOficial25: string "|                                      |"
-	TelaJogoOficial26: string "|                                      |"
-	TelaJogoOficial27: string "|                                      |"
-	TelaJogoOficial28: string "|                                      |"
-	TelaJogoOficial29: string "----------------------------------------"
+TelaPreJogo00: string "========================================"
+TelaPreJogo01: string "|                                      |"
+TelaPreJogo02: string "|                                      |"
+TelaPreJogo03: string "|                                      |"
+TelaPreJogo04: string "|                                      |"
+TelaPreJogo05: string "|                                      |"
+TelaPreJogo06: string "|                                      |"
+TelaPreJogo07: string "|                                      |"
+TelaPreJogo08: string "|                                      |"
+TelaPreJogo09: string "|            OLHA A JIBOIA             |"
+TelaPreJogo10: string "|                                      |"
+TelaPreJogo11: string "|                                      |"
+TelaPreJogo12: string "|                                      |"
+TelaPreJogo13: string "|                                      |"
+TelaPreJogo14: string "|                                      |"
+TelaPreJogo15: string "|                                      |"
+TelaPreJogo16: string "|                                      |"
+TelaPreJogo17: string "|                                      |"
+TelaPreJogo18: string "|                                      |"
+TelaPreJogo19: string "|                                      |"
+TelaPreJogo20: string "|                                      |"
+TelaPreJogo21: string "|                                      |"
+TelaPreJogo22: string "|                                      |"
+TelaPreJogo23: string "|                                      |"
+TelaPreJogo24: string "|                                      |"
+TelaPreJogo25: string "|                                      |"
+TelaPreJogo26: string "|                                      |"
+TelaPreJogo27: string "|                                      |"
+TelaPreJogo28: string "|                                      |"
+TelaPreJogo29: string "========================================"
 
-
-	TelaPosColisao00: string "                                        "
-	TelaPosColisao01: string "                                        "
-	TelaPosColisao02: string "                                        "
-	TelaPosColisao03: string "                                        "
-	TelaPosColisao04: string "                                        "
-	TelaPosColisao05: string "                                        "
-	TelaPosColisao06: string "                                        "
-	TelaPosColisao07: string "                                        "
-	TelaPosColisao08: string "                                        "
-	TelaPosColisao09: string "                                        "
-	TelaPosColisao10: string "                                        "
-	TelaPosColisao11: string "                                        "
-	TelaPosColisao12: string "          AAAAAH, VOCE COLIDIU          "
-	TelaPosColisao13: string "                                        "
-	TelaPosColisao14: string "            VOCE COMEU:                 "
-	TelaPosColisao15: string "                                        "
-	TelaPosColisao16: string "     DESEJA JOGAR NOVAMENTE?  <Y/N>     "
-	TelaPosColisao17: string "                                        "
-	TelaPosColisao18: string "                                        "
-	TelaPosColisao19: string "                                        "
-	TelaPosColisao20: string "                                        "
-	TelaPosColisao21: string "                                        "
-	TelaPosColisao22: string "                                        "
-	TelaPosColisao23: string "                                        "
-	TelaPosColisao24: string "                                        "
-	TelaPosColisao25: string "                                        "
-	TelaPosColisao26: string "                                        "
-	TelaPosColisao27: string "                                        "
-	TelaPosColisao28: string "                                        "
-	TelaPosColisao29: string "                                        "
-
-
-	TelaAgradecimento00: string "                                        "
-	TelaAgradecimento01: string "                                        "
-	TelaAgradecimento02: string "                                        "
-	TelaAgradecimento03: string "                                        "
-	TelaAgradecimento04: string "                                        "
-	TelaAgradecimento05: string "                                        "
-	TelaAgradecimento06: string "                                        "
-	TelaAgradecimento07: string "                                        "
-	TelaAgradecimento08: string "                                        "
-	TelaAgradecimento09: string "                                        "
-	TelaAgradecimento10: string "                                        "
-	TelaAgradecimento11: string "                                        "
-	TelaAgradecimento12: string "        MUITO OBRIGADO POR JOGAR        "
-	TelaAgradecimento13: string "                                        "
-	TelaAgradecimento14: string "        ESPERO QUE TENHA GOSTADO        "
-	TelaAgradecimento15: string "                                        "
-	TelaAgradecimento16: string "                                        "
-	TelaAgradecimento17: string "                                        "
-	TelaAgradecimento18: string "                                        "
-	TelaAgradecimento19: string "                                        "
-	TelaAgradecimento20: string "                                        "
-	TelaAgradecimento21: string "                                        "
-	TelaAgradecimento22: string "                                        "
-	TelaAgradecimento23: string "                                        "
-	TelaAgradecimento24: string "                                        "
-	TelaAgradecimento25: string "                                        "
-	TelaAgradecimento26: string "                                        "
-	TelaAgradecimento27: string "                                        "
-	TelaAgradecimento28: string "                                        "
-	TelaAgradecimento29: string "                                        "
-
-
-	static VetorRandom + #0, #41
-	static VetorRandom + #1, #467
-	static VetorRandom + #2, #334
-	static VetorRandom + #3, #100
-	static VetorRandom + #4, #124
-	static VetorRandom + #5, #678
-	static VetorRandom + #6, #558
-	static VetorRandom + #7, #562
-	static VetorRandom + #8, #464
-	static VetorRandom + #9, #905
-	static VetorRandom + #10, #545
-	static VetorRandom + #11, #481
-	static VetorRandom + #12, #361
-	static VetorRandom + #13, #491
-	static VetorRandom + #14, #595
-	static VetorRandom + #15, #1142
-	static VetorRandom + #16, #636
-	static VetorRandom + #17, #204
-	static VetorRandom + #18, #302
-	static VetorRandom + #19, #153
-	static VetorRandom + #20, #292
-	static VetorRandom + #21, #382
-	static VetorRandom + #22, #621
-	static VetorRandom + #23, #716
-	static VetorRandom + #24, #518
-	static VetorRandom + #25, #695
-	static VetorRandom + #26, #647
-	static VetorRandom + #27, #126
-	static VetorRandom + #28, #371
-	static VetorRandom + #29, #738
-	static VetorRandom + #30, #669
-	static VetorRandom + #31, #712
-	static VetorRandom + #32, #1099
-	static VetorRandom + #33, #235
-	static VetorRandom + #34, #294
-	static VetorRandom + #35, #1103
-	static VetorRandom + #36, #1011
-	static VetorRandom + #37, #122
-	static VetorRandom + #38, #333
-	static VetorRandom + #39, #873
-	static VetorRandom + #40, #1064
-	static VetorRandom + #41, #741
-	static VetorRandom + #42, #511
-	static VetorRandom + #43, #653
-	static VetorRandom + #44, #868
-	static VetorRandom + #45, #347
-	static VetorRandom + #46, #44
-	static VetorRandom + #47, #262
-	static VetorRandom + #48, #357
-	static VetorRandom + #49, #837
-	static VetorRandom + #50, #859
-	static VetorRandom + #51, #323
-	static VetorRandom + #52, #141
-	static VetorRandom + #53, #1129
-	static VetorRandom + #54, #778
-	static VetorRandom + #55, #316
-	static VetorRandom + #56, #635
-	static VetorRandom + #57, #590
-	static VetorRandom + #58, #642
-	static VetorRandom + #59, #288
-	static VetorRandom + #60, #106
-	static VetorRandom + #61, #542
-	static VetorRandom + #62, #64
-	static VetorRandom + #63, #1048
-	static VetorRandom + #64, #1046
-	static VetorRandom + #65, #1005
-	static VetorRandom + #66, #290
-	static VetorRandom + #67, #729
-	static VetorRandom + #68, #370
-	static VetorRandom + #69, #950
-	static VetorRandom + #70, #606
-	static VetorRandom + #71, #1101
-	static VetorRandom + #72, #393
-	static VetorRandom + #73, #1148
-	static VetorRandom + #74, #429
-	static VetorRandom + #75, #623
-	static VetorRandom + #76, #84
-	static VetorRandom + #77, #754
-	static VetorRandom + #78, #756
-	static VetorRandom + #79, #166
-	static VetorRandom + #80, #176
-	static VetorRandom + #81, #731
-	static VetorRandom + #82, #1108
-	static VetorRandom + #83, #144
-	static VetorRandom + #84, #626
-	static VetorRandom + #85, #523
-	static VetorRandom + #86, #737
-	static VetorRandom + #87, #1138
-	static VetorRandom + #88, #882
-	static VetorRandom + #89, #129
-	static VetorRandom + #90, #941
-	static VetorRandom + #91, #1115
-	static VetorRandom + #92, #858
-	static VetorRandom + #93, #1104
-	static VetorRandom + #94, #330
-	static VetorRandom + #95, #777
-	static VetorRandom + #96, #1106
-	static VetorRandom + #97, #473
-	static VetorRandom + #98, #786
-	static VetorRandom + #99, #221
-	static VetorRandom + #100, #1145
-	static VetorRandom + #101, #524
-	static VetorRandom + #102, #1072
-	static VetorRandom + #103, #270
-	static VetorRandom + #104, #1029
-	static VetorRandom + #105, #377
-	static VetorRandom + #106, #297
-	static VetorRandom + #107, #912
-	static VetorRandom + #108, #90
-	static VetorRandom + #109, #761
-	static VetorRandom + #110, #755
-	static VetorRandom + #111, #767
-	static VetorRandom + #112, #855
-	static VetorRandom + #113, #431
-	static VetorRandom + #114, #52
-	static VetorRandom + #115, #1150
-	static VetorRandom + #116, #766
-	static VetorRandom + #117, #1030
-	static VetorRandom + #118, #1107
-	static VetorRandom + #119, #191
-	static VetorRandom + #120, #537
-	static VetorRandom + #121, #1057
-	static VetorRandom + #122, #287
-	static VetorRandom + #123, #783
-	static VetorRandom + #124, #509
-	static VetorRandom + #125, #1009
-	static VetorRandom + #126, #158
-	static VetorRandom + #127, #588
-	static VetorRandom + #128, #422
-	static VetorRandom + #129, #946
-	static VetorRandom + #130, #813
-	static VetorRandom + #131, #368
-	static VetorRandom + #132, #900
-	static VetorRandom + #133, #762
-	static VetorRandom + #134, #455
-	static VetorRandom + #135, #610
-	static VetorRandom + #136, #137
-	static VetorRandom + #137, #483
-	static VetorRandom + #138, #441
-	static VetorRandom + #139, #350
-	static VetorRandom + #140, #691
-	static VetorRandom + #141, #836
-	static VetorRandom + #142, #974
-	static VetorRandom + #143, #220
-	static VetorRandom + #144, #996
-	static VetorRandom + #145, #948
-	static VetorRandom + #146, #468
-	static VetorRandom + #147, #484
-	static VetorRandom + #148, #1081
-	static VetorRandom + #149, #1134
-	static VetorRandom + #150, #53
-	static VetorRandom + #151, #338
-	static VetorRandom + #152, #188
-	static VetorRandom + #153, #127
-	static VetorRandom + #154, #128
-	static VetorRandom + #155, #493
-	static VetorRandom + #156, #648
-	static VetorRandom + #157, #883
-	static VetorRandom + #158, #1007
-	static VetorRandom + #159, #1110
-	static VetorRandom + #160, #617
-	static VetorRandom + #161, #1114
-	static VetorRandom + #162, #1109
-	static VetorRandom + #163, #416
-	static VetorRandom + #164, #935
-	static VetorRandom + #165, #651
-	static VetorRandom + #166, #449
-	static VetorRandom + #167, #356
-	static VetorRandom + #168, #303
-	static VetorRandom + #169, #224
-	static VetorRandom + #170, #208
-	static VetorRandom + #171, #1044
-	static VetorRandom + #172, #209
-	static VetorRandom + #173, #589
-	static VetorRandom + #174, #795
-	static VetorRandom + #175, #85
-	static VetorRandom + #176, #693
-	static VetorRandom + #177, #1143
-	static VetorRandom + #178, #387
-	static VetorRandom + #179, #514
-	static VetorRandom + #180, #248
-	static VetorRandom + #181, #258
-	static VetorRandom + #182, #618
-	static VetorRandom + #183, #180
-	static VetorRandom + #184, #596
-	static VetorRandom + #185, #398
-	static VetorRandom + #186, #881
-	static VetorRandom + #187, #389
-	static VetorRandom + #188, #409
-	static VetorRandom + #189, #757
-	static VetorRandom + #190, #72
-	static VetorRandom + #191, #822
-	static VetorRandom + #192, #538
-	static VetorRandom + #193, #179
-	static VetorRandom + #194, #190
-	static VetorRandom + #195, #857
-	static VetorRandom + #196, #758
-	static VetorRandom + #197, #615
-	static VetorRandom + #198, #88
-	static VetorRandom + #199, #1156
-	static VetorRandom + #200, #711
-	static VetorRandom + #201, #602
-	static VetorRandom + #202, #234
-	static VetorRandom + #203, #272
-	static VetorRandom + #204, #1128
-	static VetorRandom + #205, #86
-	static VetorRandom + #206, #875
-	static VetorRandom + #207, #833
-	static VetorRandom + #208, #1069
-	static VetorRandom + #209, #942
-	static VetorRandom + #210, #216
-	static VetorRandom + #211, #281
-	static VetorRandom + #212, #798
-	static VetorRandom + #213, #722
-	static VetorRandom + #214, #421
-	static VetorRandom + #215, #899
-	static VetorRandom + #216, #1157
-	static VetorRandom + #217, #876
-	static VetorRandom + #218, #275
-	static VetorRandom + #219, #1112
-	static VetorRandom + #220, #110
-	static VetorRandom + #221, #603
-	static VetorRandom + #222, #469
-	static VetorRandom + #223, #1061
-	static VetorRandom + #224, #201
-	static VetorRandom + #225, #189
-	static VetorRandom + #226, #823
-	static VetorRandom + #227, #202
-	static VetorRandom + #228, #985
-	static VetorRandom + #229, #182
-	static VetorRandom + #230, #685
-	static VetorRandom + #231, #688
-	static VetorRandom + #232, #226
-	static VetorRandom + #233, #1017
-	static VetorRandom + #234, #957
-	static VetorRandom + #235, #232
-	static VetorRandom + #236, #932
-	static VetorRandom + #237, #569
-	static VetorRandom + #238, #954
-	static VetorRandom + #239, #521
-	static VetorRandom + #240, #776
-	static VetorRandom + #241, #1092
-	static VetorRandom + #242, #1025
-	static VetorRandom + #243, #955
-	static VetorRandom + #244, #1034
-	static VetorRandom + #245, #949
-	static VetorRandom + #246, #241
-	static VetorRandom + #247, #145
-	static VetorRandom + #248, #60
-	static VetorRandom + #249, #118
-	static VetorRandom + #250, #539
-	static VetorRandom + #251, #423
-	static VetorRandom + #252, #796
-	static VetorRandom + #253, #1087
-	static VetorRandom + #254, #529
-	static VetorRandom + #255, #637
-	static VetorRandom + #256, #666
-	static VetorRandom + #257, #193
-	static VetorRandom + #258, #395
-	static VetorRandom + #259, #897
-	static VetorRandom + #260, #686
-	static VetorRandom + #261, #505
-	static VetorRandom + #262, #488
-	static VetorRandom + #263, #682
-	static VetorRandom + #264, #534
-	static VetorRandom + #265, #114
-	static VetorRandom + #266, #901
-	static VetorRandom + #267, #116
-	static VetorRandom + #268, #271
-	static VetorRandom + #269, #986
-	static VetorRandom + #270, #263
-	static VetorRandom + #271, #713
-	static VetorRandom + #272, #355
-	static VetorRandom + #273, #853
-	static VetorRandom + #274, #632
-	static VetorRandom + #275, #156
-	static VetorRandom + #276, #721
-	static VetorRandom + #277, #358
-	static VetorRandom + #278, #846
-	static VetorRandom + #279, #544
-	static VetorRandom + #280, #396
-	static VetorRandom + #281, #1022
-	static VetorRandom + #282, #961
-	static VetorRandom + #283, #735
-	static VetorRandom + #284, #50
-	static VetorRandom + #285, #373
-	static VetorRandom + #286, #866
-	static VetorRandom + #287, #59
-	static VetorRandom + #288, #453
-	static VetorRandom + #289, #824
-	static VetorRandom + #290, #710
-	static VetorRandom + #291, #249
-	static VetorRandom + #292, #1113
-	static VetorRandom + #293, #874
-	static VetorRandom + #294, #968
-	static VetorRandom + #295, #818
-	static VetorRandom + #296, #787
-	static VetorRandom + #297, #305
-	static VetorRandom + #298, #1158
-	static VetorRandom + #299, #77
-	static VetorRandom + #300, #814
-	static VetorRandom + #301, #914
-	static VetorRandom + #302, #624
-	static VetorRandom + #303, #674
-	static VetorRandom + #304, #372
-	static VetorRandom + #305, #1033
-	static VetorRandom + #306, #470
-	static VetorRandom + #307, #697
-	static VetorRandom + #308, #318
-	static VetorRandom + #309, #977
-	static VetorRandom + #310, #973
-	static VetorRandom + #311, #1070
-	static VetorRandom + #312, #563
-	static VetorRandom + #313, #268
-	static VetorRandom + #314, #392
-	static VetorRandom + #315, #785
-	static VetorRandom + #316, #702
-	static VetorRandom + #317, #413
-	static VetorRandom + #318, #427
-	static VetorRandom + #319, #499
-	static VetorRandom + #320, #527
-	static VetorRandom + #321, #225
-	static VetorRandom + #322, #343
-	static VetorRandom + #323, #724
-	static VetorRandom + #324, #223
-	static VetorRandom + #325, #981
-	static VetorRandom + #326, #1003
-	static VetorRandom + #327, #1032
-	static VetorRandom + #328, #705
-	static VetorRandom + #329, #1125
-	static VetorRandom + #330, #1031
-	static VetorRandom + #331, #92
-	static VetorRandom + #332, #142
-	static VetorRandom + #333, #700
-	static VetorRandom + #334, #896
-	static VetorRandom + #335, #1067
-	static VetorRandom + #336, #550
-	static VetorRandom + #337, #140
-	static VetorRandom + #338, #494
-	static VetorRandom + #339, #295
-	static VetorRandom + #340, #419
-	static VetorRandom + #341, #925
-	static VetorRandom + #342, #94
-	static VetorRandom + #343, #1058
-	static VetorRandom + #344, #1102
-	static VetorRandom + #345, #571
-	static VetorRandom + #346, #1078
-	static VetorRandom + #347, #993
-	static VetorRandom + #348, #1051
-	static VetorRandom + #349, #284
-	static VetorRandom + #350, #1018
-	static VetorRandom + #351, #864
-	static VetorRandom + #352, #352
-	static VetorRandom + #353, #87
-	static VetorRandom + #354, #1060
-	static VetorRandom + #355, #726
-	static VetorRandom + #356, #970
-	static VetorRandom + #357, #227
-	static VetorRandom + #358, #43
-	static VetorRandom + #359, #309
-	static VetorRandom + #360, #286
-	static VetorRandom + #361, #765
-	static VetorRandom + #362, #74
-	static VetorRandom + #363, #829
-	static VetorRandom + #364, #728
-	static VetorRandom + #365, #902
-	static VetorRandom + #366, #123
-	static VetorRandom + #367, #61
-	static VetorRandom + #368, #125
-	static VetorRandom + #369, #916
-	static VetorRandom + #370, #230
-	static VetorRandom + #371, #1126
-	static VetorRandom + #372, #211
-	static VetorRandom + #373, #771
-	static VetorRandom + #374, #411
-	static VetorRandom + #375, #753
-	static VetorRandom + #376, #990
-	static VetorRandom + #377, #163
-	static VetorRandom + #378, #451
-	static VetorRandom + #379, #662
-	static VetorRandom + #380, #629
-	static VetorRandom + #381, #913
-	static VetorRandom + #382, #958
-	static VetorRandom + #383, #677
-	static VetorRandom + #384, #157
-	static VetorRandom + #385, #1124
-	static VetorRandom + #386, #477
-	static VetorRandom + #387, #308
-	static VetorRandom + #388, #487
-	static VetorRandom + #389, #601
-	static VetorRandom + #390, #828
-	static VetorRandom + #391, #984
-	static VetorRandom + #392, #205
-	static VetorRandom + #393, #540
-	static VetorRandom + #394, #1111
-	static VetorRandom + #395, #835
-	static VetorRandom + #396, #426
-	static VetorRandom + #397, #471
-	static VetorRandom + #398, #561
-	static VetorRandom + #399, #817
-	static VetorRandom + #400, #512
-	static VetorRandom + #401, #717
-	static VetorRandom + #402, #696
-	static VetorRandom + #403, #229
-	static VetorRandom + #404, #965
-	static VetorRandom + #405, #532
-	static VetorRandom + #406, #1055
-	static VetorRandom + #407, #162
-	static VetorRandom + #408, #934
-	static VetorRandom + #409, #654
-	static VetorRandom + #410, #172
-	static VetorRandom + #411, #207
-	static VetorRandom + #412, #83
-	static VetorRandom + #413, #911
-	static VetorRandom + #414, #48
-	static VetorRandom + #415, #1075
-	static VetorRandom + #416, #938
-	static VetorRandom + #417, #1023
-	static VetorRandom + #418, #1141
-	static VetorRandom + #419, #975
-	static VetorRandom + #420, #1059
-	static VetorRandom + #421, #821
-	static VetorRandom + #422, #734
-	static VetorRandom + #423, #805
-	static VetorRandom + #424, #583
-	static VetorRandom + #425, #1050
-	static VetorRandom + #426, #598
-	static VetorRandom + #427, #437
-	static VetorRandom + #428, #134
-	static VetorRandom + #429, #793
-	static VetorRandom + #430, #576
-	static VetorRandom + #431, #962
-	static VetorRandom + #432, #300
-	static VetorRandom + #433, #1041
-	static VetorRandom + #434, #655
-	static VetorRandom + #435, #877
-	static VetorRandom + #436, #278
-	static VetorRandom + #437, #552
-	static VetorRandom + #438, #443
-	static VetorRandom + #439, #673
-	static VetorRandom + #440, #872
-	static VetorRandom + #441, #1085
-	static VetorRandom + #442, #1090
-	static VetorRandom + #443, #790
-	static VetorRandom + #444, #745
-	static VetorRandom + #445, #340
-	static VetorRandom + #446, #444
-	static VetorRandom + #447, #458
-	static VetorRandom + #448, #335
-	static VetorRandom + #449, #405
-	static VetorRandom + #450, #181
-	static VetorRandom + #451, #903
-	static VetorRandom + #452, #492
-	static VetorRandom + #453, #749
-	static VetorRandom + #454, #929
-	static VetorRandom + #455, #213
-	static VetorRandom + #456, #374
-	static VetorRandom + #457, #1015
-	static VetorRandom + #458, #283
-	static VetorRandom + #459, #1013
-	static VetorRandom + #460, #801
-	static VetorRandom + #461, #592
-	static VetorRandom + #462, #475
-	static VetorRandom + #463, #1098
-	static VetorRandom + #464, #1047
-	static VetorRandom + #465, #503
-	static VetorRandom + #466, #1063
-	static VetorRandom + #467, #906
-	static VetorRandom + #468, #1089
-	static VetorRandom + #469, #164
-	static VetorRandom + #470, #342
-	static VetorRandom + #471, #513
-	static VetorRandom + #472, #391
-	static VetorRandom + #473, #704
-	static VetorRandom + #474, #832
-	static VetorRandom + #475, #750
-	static VetorRandom + #476, #175
-	static VetorRandom + #477, #339
-	static VetorRandom + #478, #622
-	static VetorRandom + #479, #698
-	static VetorRandom + #480, #447
-	static VetorRandom + #481, #384
-	static VetorRandom + #482, #448
-	static VetorRandom + #483, #113
-	static VetorRandom + #484, #746
-	static VetorRandom + #485, #862
-	static VetorRandom + #486, #689
-	static VetorRandom + #487, #344
-	static VetorRandom + #488, #465
-	static VetorRandom + #489, #445
-	static VetorRandom + #490, #718
-	static VetorRandom + #491, #723
-	static VetorRandom + #492, #732
-	static VetorRandom + #493, #472
-	static VetorRandom + #494, #752
-	static VetorRandom + #495, #963
-	static VetorRandom + #496, #1127
-	static VetorRandom + #497, #815
-	static VetorRandom + #498, #147
-	static VetorRandom + #499, #888
-	static VetorRandom + #500, #543
-	static VetorRandom + #501, #809
-	static VetorRandom + #502, #63
-	static VetorRandom + #503, #388
-	static VetorRandom + #504, #608
-	static VetorRandom + #505, #860
-	static VetorRandom + #506, #1154
-	static VetorRandom + #507, #690
-	static VetorRandom + #508, #843
-	static VetorRandom + #509, #420
-	static VetorRandom + #510, #748
-	static VetorRandom + #511, #667
-	static VetorRandom + #512, #936
-	static VetorRandom + #513, #383
-	static VetorRandom + #514, #1026
-	static VetorRandom + #515, #1038
-	static VetorRandom + #516, #253
-	static VetorRandom + #517, #424
-	static VetorRandom + #518, #148
-	static VetorRandom + #519, #555
-	static VetorRandom + #520, #326
-	static VetorRandom + #521, #625
-	static VetorRandom + #522, #1155
-	static VetorRandom + #523, #1001
-	static VetorRandom + #524, #1096
-	static VetorRandom + #525, #584
-	static VetorRandom + #526, #348
-	static VetorRandom + #527, #206
-	static VetorRandom + #528, #1012
-	static VetorRandom + #529, #93
-	static VetorRandom + #530, #436
-	static VetorRandom + #531, #336
-	static VetorRandom + #532, #341
-	static VetorRandom + #533, #1056
-	static VetorRandom + #534, #652
-	static VetorRandom + #535, #1136
-	static VetorRandom + #536, #838
-	static VetorRandom + #537, #82
-	static VetorRandom + #538, #155
-	static VetorRandom + #539, #1131
-	static VetorRandom + #540, #811
-	static VetorRandom + #541, #237
-	static VetorRandom + #542, #586
-	static VetorRandom + #543, #490
-	static VetorRandom + #544, #450
-	static VetorRandom + #545, #1016
-	static VetorRandom + #546, #252
-	static VetorRandom + #547, #808
-	static VetorRandom + #548, #62
-	static VetorRandom + #549, #633
-	static VetorRandom + #550, #703
-	static VetorRandom + #551, #324
-	static VetorRandom + #552, #317
-	static VetorRandom + #553, #613
-	static VetorRandom + #554, #709
-	static VetorRandom + #555, #918
-	static VetorRandom + #556, #58
-	static VetorRandom + #557, #161
-	static VetorRandom + #558, #76
-	static VetorRandom + #559, #502
-	static VetorRandom + #560, #889
-	static VetorRandom + #561, #1020
-	static VetorRandom + #562, #923
-	static VetorRandom + #563, #231
-	static VetorRandom + #564, #169
-	static VetorRandom + #565, #1008
-	static VetorRandom + #566, #1019
-	static VetorRandom + #567, #345
-	static VetorRandom + #568, #104
-	static VetorRandom + #569, #285
-	static VetorRandom + #570, #789
-	static VetorRandom + #571, #1037
-	static VetorRandom + #572, #410
-	static VetorRandom + #573, #261
-	static VetorRandom + #574, #508
-	static VetorRandom + #575, #315
-	static VetorRandom + #576, #69
-	static VetorRandom + #577, #937
-	static VetorRandom + #578, #212
-	static VetorRandom + #579, #482
-	static VetorRandom + #580, #485
-	static VetorRandom + #581, #310
-	static VetorRandom + #582, #774
-	static VetorRandom + #583, #751
-	static VetorRandom + #584, #541
-	static VetorRandom + #585, #115
-	static VetorRandom + #586, #273
-	static VetorRandom + #587, #788
-	static VetorRandom + #588, #132
-	static VetorRandom + #589, #408
-	static VetorRandom + #590, #1071
-	static VetorRandom + #591, #533
-	static VetorRandom + #592, #67
-	static VetorRandom + #593, #953
-	static VetorRandom + #594, #1095
-	static VetorRandom + #595, #425
-	static VetorRandom + #596, #198
-	static VetorRandom + #597, #909
-	static VetorRandom + #598, #1093
-	static VetorRandom + #599, #1086
-	static VetorRandom + #600, #516
-	static VetorRandom + #601, #267
-	static VetorRandom + #602, #328
-	static VetorRandom + #603, #664
-	static VetorRandom + #604, #816
-	static VetorRandom + #605, #1066
-	static VetorRandom + #606, #81
-	static VetorRandom + #607, #764
-	static VetorRandom + #608, #886
-	static VetorRandom + #609, #321
-	static VetorRandom + #610, #1073
-	static VetorRandom + #611, #802
-	static VetorRandom + #612, #707
-	static VetorRandom + #613, #307
-	static VetorRandom + #614, #681
-	static VetorRandom + #615, #736
-	static VetorRandom + #616, #893
-	static VetorRandom + #617, #1054
-	static VetorRandom + #618, #291
-	static VetorRandom + #619, #331
-	static VetorRandom + #620, #904
-	static VetorRandom + #621, #995
-	static VetorRandom + #622, #1052
-	static VetorRandom + #623, #238
-	static VetorRandom + #624, #66
-	static VetorRandom + #625, #98
-	static VetorRandom + #626, #233
-	static VetorRandom + #627, #1146
-	static VetorRandom + #628, #325
-	static VetorRandom + #629, #658
-	static VetorRandom + #630, #807
-	static VetorRandom + #631, #498
-	static VetorRandom + #632, #78
-	static VetorRandom + #633, #715
-	static VetorRandom + #634, #362
-	static VetorRandom + #635, #397
-	static VetorRandom + #636, #218
-	static VetorRandom + #637, #628
-	static VetorRandom + #638, #849
-	static VetorRandom + #639, #747
-	static VetorRandom + #640, #792
-	static VetorRandom + #641, #554
-	static VetorRandom + #642, #346
-	static VetorRandom + #643, #314
-	static VetorRandom + #644, #546
-	static VetorRandom + #645, #369
-	static VetorRandom + #646, #675
-	static VetorRandom + #647, #515
-	static VetorRandom + #648, #570
-	static VetorRandom + #649, #549
-	static VetorRandom + #650, #1133
-	static VetorRandom + #651, #337
-	static VetorRandom + #652, #714
-	static VetorRandom + #653, #564
-	static VetorRandom + #654, #1135
-	static VetorRandom + #655, #105
-	static VetorRandom + #656, #404
-	static VetorRandom + #657, #568
-	static VetorRandom + #658, #994
-	static VetorRandom + #659, #276
-	static VetorRandom + #660, #819
-	static VetorRandom + #661, #943
-	static VetorRandom + #662, #385
-	static VetorRandom + #663, #616
-	static VetorRandom + #664, #250
-	static VetorRandom + #665, #415
-	static VetorRandom + #666, #264
-	static VetorRandom + #667, #474
-	static VetorRandom + #668, #495
-	static VetorRandom + #669, #831
-	static VetorRandom + #670, #1068
-	static VetorRandom + #671, #910
-	static VetorRandom + #672, #379
-	static VetorRandom + #673, #582
-	static VetorRandom + #674, #964
-	static VetorRandom + #675, #972
-	static VetorRandom + #676, #922
-	static VetorRandom + #677, #195
-	static VetorRandom + #678, #743
-	static VetorRandom + #679, #228
-	static VetorRandom + #680, #708
-	static VetorRandom + #681, #406
-	static VetorRandom + #682, #966
-	static VetorRandom + #683, #567
-	static VetorRandom + #684, #892
-	static VetorRandom + #685, #187
-	static VetorRandom + #686, #556
-	static VetorRandom + #687, #531
-	static VetorRandom + #688, #983
-	static VetorRandom + #689, #548
-	static VetorRandom + #690, #418
-	static VetorRandom + #691, #376
-	static VetorRandom + #692, #820
-	static VetorRandom + #693, #982
-	static VetorRandom + #694, #525
-	static VetorRandom + #695, #486
-	static VetorRandom + #696, #1097
-	static VetorRandom + #697, #812
-	static VetorRandom + #698, #850
-	static VetorRandom + #699, #254
-	static VetorRandom + #700, #269
-	static VetorRandom + #701, #1065
-	static VetorRandom + #702, #593
-	static VetorRandom + #703, #634
-	static VetorRandom + #704, #572
-	static VetorRandom + #705, #842
-	static VetorRandom + #706, #979
-	static VetorRandom + #707, #969
-	static VetorRandom + #708, #42
-	static VetorRandom + #709, #851
-	static VetorRandom + #710, #260
-	static VetorRandom + #711, #210
-	static VetorRandom + #712, #434
-	static VetorRandom + #713, #865
-	static VetorRandom + #714, #138
-	static VetorRandom + #715, #1014
-	static VetorRandom + #716, #863
-	static VetorRandom + #717, #407
-	static VetorRandom + #718, #289
-	static VetorRandom + #719, #365
-	static VetorRandom + #720, #386
-	static VetorRandom + #721, #186
-	static VetorRandom + #722, #130
-	static VetorRandom + #723, #848
-	static VetorRandom + #724, #528
-	static VetorRandom + #725, #692
-	static VetorRandom + #726, #433
-	static VetorRandom + #727, #535
-	static VetorRandom + #728, #782
-	static VetorRandom + #729, #194
-	static VetorRandom + #730, #852
-	static VetorRandom + #731, #847
-	static VetorRandom + #732, #49
-	static VetorRandom + #733, #500
-	static VetorRandom + #734, #612
-	static VetorRandom + #735, #1123
-	static VetorRandom + #736, #1091
-	static VetorRandom + #737, #390
-	static VetorRandom + #738, #497
-	static VetorRandom + #739, #980
-	static VetorRandom + #740, #978
-	static VetorRandom + #741, #931
-	static VetorRandom + #742, #940
-	static VetorRandom + #743, #192
-	static VetorRandom + #744, #349
-	static VetorRandom + #745, #579
-	static VetorRandom + #746, #971
-	static VetorRandom + #747, #73
-	static VetorRandom + #748, #378
-	static VetorRandom + #749, #89
-	static VetorRandom + #750, #1049
-	static VetorRandom + #751, #924
-	static VetorRandom + #752, #672
-	static VetorRandom + #753, #780
-	static VetorRandom + #754, #367
-	static VetorRandom + #755, #522
-	static VetorRandom + #756, #611
-	static VetorRandom + #757, #256
-	static VetorRandom + #758, #890
-	static VetorRandom + #759, #1083
-	static VetorRandom + #760, #154
-	static VetorRandom + #761, #462
-	static VetorRandom + #762, #215
-	static VetorRandom + #763, #184
-	static VetorRandom + #764, #1117
-	static VetorRandom + #765, #96
-	static VetorRandom + #766, #578
-	static VetorRandom + #767, #676
-	static VetorRandom + #768, #255
-	static VetorRandom + #769, #944
-	static VetorRandom + #770, #117
-	static VetorRandom + #771, #1116
-	static VetorRandom + #772, #1074
-	static VetorRandom + #773, #112
-	static VetorRandom + #774, #457
-	static VetorRandom + #775, #236
-	static VetorRandom + #776, #151
-	static VetorRandom + #777, #665
-	static VetorRandom + #778, #861
-	static VetorRandom + #779, #45
-	static VetorRandom + #780, #170
-	static VetorRandom + #781, #149
-	static VetorRandom + #782, #933
-	static VetorRandom + #783, #614
-	static VetorRandom + #784, #607
-	static VetorRandom + #785, #496
-	static VetorRandom + #786, #841
-	static VetorRandom + #787, #987
-	static VetorRandom + #788, #247
-	static VetorRandom + #789, #46
-	static VetorRandom + #790, #282
-	static VetorRandom + #791, #997
-	static VetorRandom + #792, #506
-	static VetorRandom + #793, #574
-	static VetorRandom + #794, #998
-	static VetorRandom + #795, #1035
-	static VetorRandom + #796, #1147
-	static VetorRandom + #797, #478
-	static VetorRandom + #798, #401
-	static VetorRandom + #799, #353
-	static VetorRandom + #800, #687
-	static VetorRandom + #801, #299
-	static VetorRandom + #802, #643
-	static VetorRandom + #803, #381
-	static VetorRandom + #804, #781
-	static VetorRandom + #805, #178
-	static VetorRandom + #806, #1006
-	static VetorRandom + #807, #894
-	static VetorRandom + #808, #109
-	static VetorRandom + #809, #768
-	static VetorRandom + #810, #97
-	static VetorRandom + #811, #131
-	static VetorRandom + #812, #244
-	static VetorRandom + #813, #107
-	static VetorRandom + #814, #1027
-	static VetorRandom + #815, #1152
-	static VetorRandom + #816, #668
-	static VetorRandom + #817, #111
-	static VetorRandom + #818, #804
-	static VetorRandom + #819, #222
-	static VetorRandom + #820, #988
-	static VetorRandom + #821, #65
-	static VetorRandom + #822, #1153
-	static VetorRandom + #823, #504
-	static VetorRandom + #824, #684
-	static VetorRandom + #825, #364
-	static VetorRandom + #826, #56
-	static VetorRandom + #827, #259
-	static VetorRandom + #828, #895
-	static VetorRandom + #829, #435
-	static VetorRandom + #830, #908
-	static VetorRandom + #831, #293
-	static VetorRandom + #832, #146
-	static VetorRandom + #833, #773
-	static VetorRandom + #834, #266
-	static VetorRandom + #835, #196
-	static VetorRandom + #836, #412
-	static VetorRandom + #837, #136
-	static VetorRandom + #838, #1043
-	static VetorRandom + #839, #742
-	static VetorRandom + #840, #1122
-	static VetorRandom + #841, #917
-	static VetorRandom + #842, #769
-	static VetorRandom + #843, #791
-	static VetorRandom + #844, #661
-	static VetorRandom + #845, #1042
-	static VetorRandom + #846, #1053
-	static VetorRandom + #847, #620
-	static VetorRandom + #848, #214
-	static VetorRandom + #849, #605
-	static VetorRandom + #850, #394
-	static VetorRandom + #851, #870
-	static VetorRandom + #852, #779
-	static VetorRandom + #853, #1105
-	static VetorRandom + #854, #257
-	static VetorRandom + #855, #438
-	static VetorRandom + #856, #501
-	static VetorRandom + #857, #763
-	static VetorRandom + #858, #645
-	static VetorRandom + #859, #351
-	static VetorRandom + #860, #245
-	static VetorRandom + #861, #139
-	static VetorRandom + #862, #354
-	static VetorRandom + #863, #604
-	static VetorRandom + #864, #878
-	static VetorRandom + #865, #1130
-	static VetorRandom + #866, #363
-	static VetorRandom + #867, #432
-	static VetorRandom + #868, #177
-	static VetorRandom + #869, #1137
-	static VetorRandom + #870, #891
-	static VetorRandom + #871, #460
-	static VetorRandom + #872, #301
-	static VetorRandom + #873, #784
-	static VetorRandom + #874, #951
-	static VetorRandom + #875, #174
-	static VetorRandom + #876, #68
-	static VetorRandom + #877, #683
-	static VetorRandom + #878, #581
-	static VetorRandom + #879, #834
-	static VetorRandom + #880, #102
-	static VetorRandom + #881, #322
-	static VetorRandom + #882, #699
-	static VetorRandom + #883, #775
-	static VetorRandom + #884, #956
-	static VetorRandom + #885, #844
-	static VetorRandom + #886, #591
-	static VetorRandom + #887, #403
-	static VetorRandom + #888, #915
-	static VetorRandom + #889, #575
-	static VetorRandom + #890, #133
-	static VetorRandom + #891, #402
-	static VetorRandom + #892, #95
-	static VetorRandom + #893, #135
-	static VetorRandom + #894, #594
-	static VetorRandom + #895, #442
-	static VetorRandom + #896, #510
-	static VetorRandom + #897, #185
-	static VetorRandom + #898, #1062
-	static VetorRandom + #899, #1149
-	static VetorRandom + #900, #311
-	static VetorRandom + #901, #898
-	static VetorRandom + #902, #952
-	static VetorRandom + #903, #1088
-	static VetorRandom + #904, #1077
-	static VetorRandom + #905, #1076
-	static VetorRandom + #906, #57
-	static VetorRandom + #907, #641
-	static VetorRandom + #908, #517
-	static VetorRandom + #909, #803
-	static VetorRandom + #910, #1028
-	static VetorRandom + #911, #631
-	static VetorRandom + #912, #630
-	static VetorRandom + #913, #459
-	static VetorRandom + #914, #243
-	static VetorRandom + #915, #597
-	static VetorRandom + #916, #1151
-	static VetorRandom + #917, #251
-	static VetorRandom + #918, #871
-	static VetorRandom + #919, #1100
-	static VetorRandom + #920, #530
-	static VetorRandom + #921, #265
-	static VetorRandom + #922, #298
-	static VetorRandom + #923, #989
-	static VetorRandom + #924, #730
-	static VetorRandom + #925, #627
-	static VetorRandom + #926, #103
-	static VetorRandom + #927, #277
-	static VetorRandom + #928, #885
-	static VetorRandom + #929, #646
-	static VetorRandom + #930, #489
-	static VetorRandom + #931, #1021
-	static VetorRandom + #932, #927
-	static VetorRandom + #933, #945
-	static VetorRandom + #934, #573
-	static VetorRandom + #935, #1139
-	static VetorRandom + #936, #884
-	static VetorRandom + #937, #536
-	static VetorRandom + #938, #557
-	static VetorRandom + #939, #274
-	static VetorRandom + #940, #638
-	static VetorRandom + #941, #165
-	static VetorRandom + #942, #967
-	static VetorRandom + #943, #91
-	static VetorRandom + #944, #976
-	static VetorRandom + #945, #869
-	static VetorRandom + #946, #108
-	static VetorRandom + #947, #366
-	static VetorRandom + #948, #1118
-	static VetorRandom + #949, #739
-	static VetorRandom + #950, #414
-	static VetorRandom + #951, #587
-	static VetorRandom + #952, #1002
-	static VetorRandom + #953, #991
-	static VetorRandom + #954, #656
-	static VetorRandom + #955, #660
-	static VetorRandom + #956, #173
-	static VetorRandom + #957, #51
-	static VetorRandom + #958, #329
-	static VetorRandom + #959, #671
-	static VetorRandom + #960, #466
-	static VetorRandom + #961, #867
-	static VetorRandom + #962, #947
-	static VetorRandom + #963, #143
-	static VetorRandom + #964, #585
-	static VetorRandom + #965, #744
-	static VetorRandom + #966, #461
-	static VetorRandom + #967, #930
-	static VetorRandom + #968, #167
-	static VetorRandom + #969, #430
-	static VetorRandom + #970, #71
-	static VetorRandom + #971, #992
-	static VetorRandom + #972, #1140
-	static VetorRandom + #973, #806
-	static VetorRandom + #974, #454
-	static VetorRandom + #975, #54
-	static VetorRandom + #976, #740
-	static VetorRandom + #977, #217
-	static VetorRandom + #978, #313
-	static VetorRandom + #979, #168
-	static VetorRandom + #980, #727
-	static VetorRandom + #981, #830
-	static VetorRandom + #982, #921
-	static VetorRandom + #983, #650
-	static VetorRandom + #984, #101
-	static VetorRandom + #985, #99
-	static VetorRandom + #986, #75
-	static VetorRandom + #987, #1004
-	static VetorRandom + #988, #810
-	static VetorRandom + #989, #856
-	static VetorRandom + #990, #565
-	static VetorRandom + #991, #306
-	static VetorRandom + #992, #70
-	static VetorRandom + #993, #725
-	static VetorRandom + #994, #203
-	static VetorRandom + #995, #826
-	static VetorRandom + #996, #304
-	static VetorRandom + #997, #456
-	static VetorRandom + #998, #928
-	static VetorRandom + #999, #827
-	static VetorRandom + #1000, #463
-	static VetorRandom + #1001, #47
-	static VetorRandom + #1002, #706
-	static VetorRandom + #1003, #1036
-	static VetorRandom + #1004, #332
-	static VetorRandom + #1005, #312
-	static VetorRandom + #1006, #551
-	static VetorRandom + #1007, #939
-	static VetorRandom + #1008, #547
-	static VetorRandom + #1009, #577
-	static VetorRandom + #1010, #887
-	static VetorRandom + #1011, #197
-	static VetorRandom + #1012, #1084
-	static VetorRandom + #1013, #327
-	static VetorRandom + #1014, #296
-	static VetorRandom + #1015, #507
-	static VetorRandom + #1016, #580
-	static VetorRandom + #1017, #171
-	static VetorRandom + #1018, #701
-	static VetorRandom + #1019, #150
-	static VetorRandom + #1020, #670
-	static VetorRandom + #1021, #1121
-	static VetorRandom + #1022, #797
-	static VetorRandom + #1023, #121
-	static VetorRandom + #1024, #659
-	static VetorRandom + #1025, #772
-	static VetorRandom + #1026, #926
-	static VetorRandom + #1027, #609
-	static VetorRandom + #1028, #183
-	static VetorRandom + #1029, #694
-	static VetorRandom + #1030, #825
-	static VetorRandom + #1031, #219
-	static VetorRandom + #1032, #476
-	static VetorRandom + #1033, #246
-	static VetorRandom + #1034, #152
-	static VetorRandom + #1035, #526
-	static VetorRandom + #1036, #1045
-	static VetorRandom + #1037, #452
-	static VetorRandom + #1038, #242
-	static VetorRandom + #1039, #644
-	static VetorRandom + #1040, #1024
-	static VetorRandom + #1041, #1094
-	static VetorRandom + #1042, #375
-	static VetorRandom + #1043, #566
-	static VetorRandom + #1044, #794
-	static VetorRandom + #1045, #845
-	static VetorRandom + #1046, #553
-	static VetorRandom + #1047, #1082
-	static VetorRandom + #1048, #649
-	static VetorRandom + #1049, #770
-	static VetorRandom + #1050, #428
-	static VetorRandom + #1051, #663
-	static VetorRandom + #1052, #657
-	static VetorRandom + #1053, #907
-	static VetorRandom + #1054, #1132
-	static VetorRandom + #1055, #733
-	static VetorRandom + #1056, #446
-	static VetorRandom + #1057, #1144
-	static VetorRandom + #1058, #854
-	static VetorRandom + #1059, #417
-	static VetorRandom + #1060, #380
-	static VetorRandom + #1061, #619
-	static VetorRandom + #1062, #55
-	static VetorRandom + #1063, #1010			
+static Food + #0, #536
+static Food + #1, #1097
+static Food + #2, #1020
+static Food + #3, #620
+static Food + #4, #451
+static Food + #5, #1078
+static Food + #6, #772
+static Food + #7, #1047
+static Food + #8, #976
+static Food + #9, #565
+static Food + #10, #490
+static Food + #11, #515
+static Food + #12, #175
+static Food + #13, #350
+static Food + #14, #510
+static Food + #15, #165
+static Food + #16, #275
+static Food + #17, #605
+static Food + #18, #726
+static Food + #19, #654
+static Food + #20, #938
+static Food + #21, #766
+static Food + #22, #841
+static Food + #23, #391
+static Food + #24, #163
+static Food + #25, #990
+static Food + #26, #388
+static Food + #27, #450
+static Food + #28, #331
+static Food + #29, #534
+static Food + #30, #1038
+static Food + #31, #847
+static Food + #32, #989
+static Food + #33, #968
+static Food + #34, #216
+static Food + #35, #194
+static Food + #36, #567
+static Food + #37, #485
+static Food + #38, #913
+static Food + #39, #751
+static Food + #40, #207
+static Food + #41, #628
+static Food + #42, #407
+static Food + #43, #572
+static Food + #44, #1051
+static Food + #45, #885
+static Food + #46, #945
+static Food + #47, #402
+static Food + #48, #607
+static Food + #49, #258
+static Food + #50, #725
+static Food + #51, #550
+static Food + #52, #463
+static Food + #53, #291
+static Food + #54, #949
+static Food + #55, #431
+static Food + #56, #796
+static Food + #57, #643
+static Food + #58, #794
+static Food + #59, #979
+static Food + #60, #1014
+static Food + #61, #975
+static Food + #62, #300
+static Food + #63, #267
+static Food + #64, #1056
+static Food + #65, #710
+static Food + #66, #481
+static Food + #67, #1048
+static Food + #68, #314
+static Food + #69, #532
+static Food + #70, #763
+static Food + #71, #542
+static Food + #72, #1023
+static Food + #73, #1044
+static Food + #74, #555
+static Food + #75, #354
+static Food + #76, #386
+static Food + #77, #340
+static Food + #78, #478
+static Food + #79, #994
+static Food + #80, #797
+static Food + #81, #665
+static Food + #82, #382
+static Food + #83, #269
+static Food + #84, #337
+static Food + #85, #557
+static Food + #86, #1104
+static Food + #87, #943
+static Food + #88, #948
+static Food + #89, #728
+static Food + #90, #822
+static Food + #91, #531
+static Food + #92, #624
+static Food + #93, #881
+static Food + #94, #409
+static Food + #95, #1063
+static Food + #96, #283
+static Food + #97, #983
+static Food + #98, #972
+static Food + #99, #525
+static Food + #100, #958
+static Food + #101, #365
+static Food + #102, #929
+static Food + #103, #577
+static Food + #104, #831
+static Food + #105, #708
+static Food + #106, #818
+static Food + #107, #771
+static Food + #108, #201
+static Food + #109, #435
+static Food + #110, #593
+static Food + #111, #294
+static Food + #112, #677
+static Food + #113, #215
+static Food + #114, #462
+static Food + #115, #1010
+static Food + #116, #816
+static Food + #117, #564
+static Food + #118, #753
+static Food + #119, #211
+static Food + #120, #658
+static Food + #121, #325
+static Food + #122, #898
+static Food + #123, #579
+static Food + #124, #210
+static Food + #125, #649
+static Food + #126, #568
+static Food + #127, #1087
+static Food + #128, #196
+static Food + #129, #422
+static Food + #130, #830
+static Food + #131, #1036
+static Food + #132, #357
+static Food + #133, #326
+static Food + #134, #805
+static Food + #135, #584
+static Food + #136, #276
+static Food + #137, #547
+static Food + #138, #987
+static Food + #139, #798
+static Food + #140, #695
+static Food + #141, #874
+static Food + #142, #1019
+static Food + #143, #1102
+static Food + #144, #379
+static Food + #145, #511
+static Food + #146, #433
+static Food + #147, #1109
+static Food + #148, #1107
+static Food + #149, #928
+static Food + #150, #457
+static Food + #151, #651
+static Food + #152, #735
+static Food + #153, #894
+static Food + #154, #780
+static Food + #155, #1108
+static Food + #156, #214
+static Food + #157, #349
+static Food + #158, #946
+static Food + #159, #854
+static Food + #160, #604
+static Food + #161, #705
+static Food + #162, #459
+static Food + #163, #686
+static Food + #164, #370
+static Food + #165, #282
+static Food + #166, #343
+static Food + #167, #917
+static Food + #168, #569
+static Food + #169, #251
+static Food + #170, #1029
+static Food + #171, #896
+static Food + #172, #701
+static Food + #173, #832
+static Food + #174, #259
+static Food + #175, #204
+static Food + #176, #638
+static Food + #177, #714
+static Food + #178, #985
+static Food + #179, #295
+static Food + #180, #668
+static Food + #181, #627
+static Food + #182, #891
+static Food + #183, #452
+static Food + #184, #234
+static Food + #185, #642
+static Food + #186, #523
+static Food + #187, #845
+static Food + #188, #1100
+static Food + #189, #869
+static Food + #190, #302
+static Food + #191, #746
+static Food + #192, #792
+static Food + #193, #1061
+static Food + #194, #363
+static Food + #195, #614
+static Food + #196, #587
+static Food + #197, #310
+static Food + #198, #915
+static Food + #199, #1012
+static Food + #200, #426
+static Food + #201, #663
+static Food + #202, #712
+static Food + #203, #212
+static Food + #204, #802
+static Food + #205, #730
+static Food + #206, #487
+static Food + #207, #807
+static Food + #208, #1004
+static Food + #209, #1002
+static Food + #210, #1083
+static Food + #211, #414
+static Food + #212, #857
+static Food + #213, #873
+static Food + #214, #1067
+static Food + #215, #248
+static Food + #216, #471
+static Food + #217, #747
+static Food + #218, #1094
+static Food + #219, #436
+static Food + #220, #174
+static Food + #221, #1082
+static Food + #222, #806
+static Food + #223, #856
+static Food + #224, #438
+static Food + #225, #997
+static Food + #226, #942
+static Food + #227, #432
+static Food + #228, #860
+static Food + #229, #739
+static Food + #230, #924
+static Food + #231, #506
+static Food + #232, #226
+static Food + #233, #693
+static Food + #234, #886
+static Food + #235, #764
+static Food + #236, #289
+static Food + #237, #956
+static Food + #238, #644
+static Food + #239, #770
+static Food + #240, #795
+static Food + #241, #205
+static Food + #242, #190
+static Food + #243, #901
+static Food + #244, #425
+static Food + #245, #573
+static Food + #246, #1071
+static Food + #247, #698
+static Food + #248, #844
+static Food + #249, #423
+static Food + #250, #922
+static Food + #251, #926
+static Food + #252, #724
+static Food + #253, #344
+static Food + #254, #941
+static Food + #255, #824
+static Food + #256, #317
+static Food + #257, #419
+static Food + #258, #801
+static Food + #259, #252
+static Food + #260, #641
+static Food + #261, #509
+static Food + #262, #397
+static Food + #263, #223
+static Food + #264, #316
+static Food + #265, #472
+static Food + #266, #892
+static Food + #267, #1049
+static Food + #268, #167
+static Food + #269, #288
+static Food + #270, #1089
+static Food + #271, #884
+static Food + #272, #862
+static Food + #273, #466
+static Food + #274, #890
+static Food + #275, #378
+static Food + #276, #995
+static Food + #277, #396
+static Food + #278, #1001
+static Food + #279, #522
+static Food + #280, #571
+static Food + #281, #870
+static Food + #282, #303
+static Food + #283, #533
+static Food + #284, #264
+static Food + #285, #323
+static Food + #286, #262
+static Food + #287, #721
+static Food + #288, #691
+static Food + #289, #619
+static Food + #290, #909
+static Food + #291, #424
+static Food + #292, #286
+static Food + #293, #808
+static Food + #294, #364
+static Food + #295, #756
+static Food + #296, #220
+static Food + #297, #1081
+static Food + #298, #273
+static Food + #299, #758
+static Food + #300, #322
+static Food + #301, #415
+static Food + #302, #304
+static Food + #303, #1033
+static Food + #304, #384
+static Food + #305, #878
+static Food + #306, #166
+static Food + #307, #1116
+static Food + #308, #1091
+static Food + #309, #733
+static Food + #310, #1084
+static Food + #311, #952
+static Food + #312, #998
+static Food + #313, #306
+static Food + #314, #249
+static Food + #315, #1065
+static Food + #316, #1103
+static Food + #317, #675
+static Food + #318, #514
+static Food + #319, #442
+static Food + #320, #966
+static Food + #321, #963
+static Food + #322, #526
+static Food + #323, #1030
+static Food + #324, #313
+static Food + #325, #189
+static Food + #326, #969
+static Food + #327, #305
+static Food + #328, #1034
+static Food + #329, #430
+static Food + #330, #934
+static Food + #331, #652
+static Food + #332, #329
+static Food + #333, #173
+static Food + #334, #366
+static Food + #335, #496
+static Food + #336, #347
+static Food + #337, #561
+static Food + #338, #597
+static Food + #339, #855
+static Food + #340, #583
+static Food + #341, #702
+static Food + #342, #842
+static Food + #343, #1011
+static Food + #344, #461
+static Food + #345, #804
+static Food + #346, #346
+static Food + #347, #437
+static Food + #348, #540
+static Food + #349, #476
+static Food + #350, #837
+static Food + #351, #455
+static Food + #352, #387
+static Food + #353, #1054
+static Food + #354, #676
+static Food + #355, #636
+static Food + #356, #1095
+static Food + #357, #954
+static Food + #358, #743
+static Food + #359, #342
+static Food + #360, #351
+static Food + #361, #947
+static Food + #362, #441
+static Food + #363, #556
+static Food + #364, #825
+static Food + #365, #817
+static Food + #366, #779
+static Food + #367, #964
+static Food + #368, #381
+static Food + #369, #473
+static Food + #370, #301
+static Food + #371, #241
+static Food + #372, #828
+static Food + #373, #809
+static Food + #374, #1027
+static Food + #375, #263
+static Food + #376, #810
+static Food + #377, #925
+static Food + #378, #231
+static Food + #379, #867
+static Food + #380, #464
+static Food + #381, #731
+static Food + #382, #608
+static Food + #383, #255
+static Food + #384, #546
+static Food + #385, #734
+static Food + #386, #1117
+static Food + #387, #421
+static Food + #388, #673
+static Food + #389, #394
+static Food + #390, #410
+static Food + #391, #937
+static Food + #392, #871
+static Food + #393, #566
+static Food + #394, #1111
+static Food + #395, #260
+static Food + #396, #689
+static Food + #397, #477
+static Food + #398, #356
+static Food + #399, #398
+static Food + #400, #609
+static Food + #401, #1058
+static Food + #402, #447
+static Food + #403, #281
+static Food + #404, #377
+static Food + #405, #1070
+static Food + #406, #406
+static Food + #407, #781
+static Food + #408, #229
+static Food + #409, #492
+static Food + #410, #601
+static Food + #411, #988
+static Food + #412, #1021
+static Food + #413, #537
+static Food + #414, #615
+static Food + #415, #1092
+static Food + #416, #467
+static Food + #417, #973
+static Food + #418, #843
+static Food + #419, #375
+static Food + #420, #711
+static Food + #421, #367
+static Food + #422, #933
+static Food + #423, #238
+static Food + #424, #697
+static Food + #425, #541
+static Food + #426, #1016
+static Food + #427, #411
+static Food + #428, #1113
+static Food + #429, #272
+static Food + #430, #393
+static Food + #431, #202
+static Food + #432, #1042
+static Food + #433, #594
+static Food + #434, #744
+static Food + #435, #1064
+static Food + #436, #581
+static Food + #437, #1101
+static Food + #438, #270
+static Food + #439, #591
+static Food + #440, #768
+static Food + #441, #740
+static Food + #442, #986
+static Food + #443, #195
+static Food + #444, #332
+static Food + #445, #932
+static Food + #446, #257
+static Food + #447, #254
+static Food + #448, #836
+static Food + #449, #852
+static Food + #450, #1118
+static Food + #451, #783
+static Food + #452, #670
+static Food + #453, #502
+static Food + #454, #660
+static Food + #455, #246
+static Food + #456, #188
+static Food + #457, #418
+static Food + #458, #713
+static Food + #459, #1090
+static Food + #460, #528
+static Food + #461, #951
+static Food + #462, #392
+static Food + #463, #803
+static Food + #464, #598
+static Food + #465, #848
+static Food + #466, #521
+static Food + #467, #448
+static Food + #468, #187
+static Food + #469, #774
+static Food + #470, #612
+static Food + #471, #784
+static Food + #472, #328
+static Food + #473, #232
+static Food + #474, #454
+static Food + #475, #685
+static Food + #476, #769
+static Food + #477, #1003
+static Food + #478, #978
+static Food + #479, #782
+static Food + #480, #980
+static Food + #481, #390
+static Food + #482, #475
+static Food + #483, #911
+static Food + #484, #887
+static Food + #485, #741
+static Food + #486, #443
+static Food + #487, #1096
+static Food + #488, #1068
+static Food + #489, #266
+static Food + #490, #529
+static Food + #491, #338
+static Food + #492, #1017
+static Food + #493, #570
+static Food + #494, #465
+static Food + #495, #961
+static Food + #496, #633
+static Food + #497, #897
+static Food + #498, #875
+static Food + #499, #895
+static Food + #500, #355
+static Food + #501, #750
+static Food + #502, #709
+static Food + #503, #773
+static Food + #504, #683
+static Food + #505, #324
+static Food + #506, #967
+static Food + #507, #850
+static Food + #508, #191
+static Food + #509, #914
+static Food + #510, #1106
+static Food + #511, #469
+static Food + #512, #403
+static Food + #513, #737
+static Food + #514, #664
+static Food + #515, #228
+static Food + #516, #757
+static Food + #517, #429
+static Food + #518, #687
+static Food + #519, #265
+static Food + #520, #893
+static Food + #521, #866
+static Food + #522, #268
+static Food + #523, #586
+static Food + #524, #549
+static Food + #525, #504
+static Food + #526, #791
+static Food + #527, #877
+static Food + #528, #562
+static Food + #529, #1060
+static Food + #530, #846
+static Food + #531, #197
+static Food + #532, #858
+static Food + #533, #524
+static Food + #534, #376
+static Food + #535, #299
+static Food + #536, #1015
+static Food + #537, #775
+static Food + #538, #706
+static Food + #539, #1073
+static Food + #540, #456
+static Food + #541, #787
+static Food + #542, #1035
+static Food + #543, #965
+static Food + #544, #408
+static Food + #545, #287
+static Food + #546, #330
+static Food + #547, #551
+static Food + #548, #617
+static Food + #549, #851
+static Food + #550, #827
+static Food + #551, #380
+static Food + #552, #900
+static Food + #553, #244
+static Food + #554, #352
+static Food + #555, #790
+static Food + #556, #602
+static Food + #557, #755
+static Food + #558, #716
+static Food + #559, #176
+static Food + #560, #284
+static Food + #561, #180
+static Food + #562, #1037
+static Food + #563, #935
+static Food + #564, #907
+static Food + #565, #548
+static Food + #566, #245
+static Food + #567, #247
+static Food + #568, #530
+static Food + #569, #630
+static Food + #570, #315
+static Food + #571, #694
+static Food + #572, #369
+static Food + #573, #218
+static Food + #574, #235
+static Food + #575, #991
+static Food + #576, #219
+static Food + #577, #1007
+static Food + #578, #427
+static Food + #579, #939
+static Food + #580, #493
+static Food + #581, #474
+static Food + #582, #483
+static Food + #583, #236
+static Food + #584, #575
+static Food + #585, #503
+static Food + #586, #1110
+static Food + #587, #953
+static Food + #588, #646
+static Food + #589, #762
+static Food + #590, #460
+static Food + #591, #974
+static Food + #592, #341
+static Food + #593, #1066
+static Food + #594, #667
+static Food + #595, #611
+static Food + #596, #703
+static Food + #597, #655
+static Food + #598, #230
+static Food + #599, #271
+static Food + #600, #930
+static Food + #601, #821
+static Food + #602, #692
+static Food + #603, #789
+static Food + #604, #1105
+static Food + #605, #899
+static Food + #606, #865
+static Food + #607, #811
+static Food + #608, #179
+static Food + #609, #833
+static Food + #610, #707
+static Food + #611, #992
+static Food + #612, #458
+static Food + #613, #786
+static Food + #614, #736
+static Food + #615, #908
+static Food + #616, #616
+static Food + #617, #554
+static Food + #618, #1008
+static Food + #619, #576
+static Food + #620, #977
+static Food + #621, #1041
+static Food + #622, #696
+static Food + #623, #372
+static Food + #624, #729
+static Food + #625, #1072
+static Food + #626, #669
+static Food + #627, #345
+static Food + #628, #912
+static Food + #629, #516
+static Food + #630, #335
+static Food + #631, #318
+static Food + #632, #1032
+static Food + #633, #931
+static Food + #634, #508
+static Food + #635, #1024
+static Food + #636, #468
+static Food + #637, #767
+static Food + #638, #563
+static Food + #639, #637
+static Food + #640, #585
+static Food + #641, #761
+static Food + #642, #916
+static Food + #643, #666
+static Food + #644, #512
+static Food + #645, #820
+static Food + #646, #626
+static Food + #647, #1077
+static Food + #648, #927
+static Food + #649, #362
+static Food + #650, #1031
+static Food + #651, #653
+static Food + #652, #1052
+static Food + #653, #906
+static Food + #654, #498
+static Food + #655, #486
+static Food + #656, #1088
+static Food + #657, #835
+static Food + #658, #1099
+static Food + #659, #224
+static Food + #660, #859
+static Food + #661, #348
+static Food + #662, #723
+static Food + #663, #172
+static Food + #664, #727
+static Food + #665, #513
+static Food + #666, #168
+static Food + #667, #1006
+static Food + #668, #416
+static Food + #669, #444
+static Food + #670, #982
+static Food + #671, #596
+static Food + #672, #777
+static Food + #673, #1098
+static Food + #674, #227
+static Food + #675, #754
+static Food + #676, #290
+static Food + #677, #242
+static Food + #678, #923
+static Food + #679, #621
+static Food + #680, #311
+static Food + #681, #588
+static Food + #682, #405
+static Food + #683, #785
+static Food + #684, #1074
+static Food + #685, #374
+static Food + #686, #1086
+static Food + #687, #327
+static Food + #688, #622
+static Food + #689, #905
+static Food + #690, #539
+static Food + #691, #420
+static Food + #692, #936
+static Food + #693, #297
+static Food + #694, #518
+static Food + #695, #815
+static Food + #696, #181
+static Food + #697, #552
+static Food + #698, #169
+static Food + #699, #984
+static Food + #700, #1022
+static Food + #701, #589
+static Food + #702, #491
+static Food + #703, #250
+static Food + #704, #237
+static Food + #705, #657
+static Food + #706, #631
+static Food + #707, #645
+static Food + #708, #274
+static Food + #709, #580
+static Food + #710, #682
+static Food + #711, #955
+static Food + #712, #823
+static Food + #713, #333
+static Food + #714, #413
+static Food + #715, #312
+static Food + #716, #849
+static Food + #717, #674
+static Food + #718, #192
+static Food + #719, #185
+static Food + #720, #1043
+static Food + #721, #595
+static Food + #722, #225
+static Food + #723, #868
+static Food + #724, #389
+static Food + #725, #590
+static Food + #726, #1059
+static Food + #727, #650
+static Food + #728, #217
+static Food + #729, #629
+static Food + #730, #1026
+static Food + #731, #940
+static Food + #732, #981
+static Food + #733, #904
+static Food + #734, #748
+static Food + #735, #634
+static Food + #736, #970
+static Food + #737, #678
+static Food + #738, #962
+static Food + #739, #902
+static Food + #740, #206
+static Food + #741, #864
+static Food + #742, #648
+static Food + #743, #717
+static Food + #744, #1085
+static Food + #745, #495
+static Food + #746, #353
+static Food + #747, #883
+static Food + #748, #417
+static Food + #749, #882
+static Food + #750, #198
+static Food + #751, #178
+static Food + #752, #1069
+static Food + #753, #164
+static Food + #754, #412
+static Food + #755, #1075
+static Food + #756, #186
+static Food + #757, #863
+static Food + #758, #428
+static Food + #759, #358
+static Food + #760, #889
+static Food + #761, #944
+static Food + #762, #578
+static Food + #763, #778
+static Food + #764, #950
+static Food + #765, #309
+static Food + #766, #704
+static Food + #767, #545
+static Food + #768, #752
+static Food + #769, #1005
+static Food + #770, #368
+static Food + #771, #921
+static Food + #772, #957
+static Food + #773, #625
+static Food + #774, #715
+static Food + #775, #993
+static Food + #776, #277
+static Food + #777, #500
+static Food + #778, #700
+static Food + #779, #829
+static Food + #780, #308
+static Food + #781, #261
+static Food + #782, #910
+static Food + #783, #208
+static Food + #784, #623
+static Food + #785, #293	
+static Food + #786, #732
+static Food + #787, #876
+static Food + #788, #1114
+static Food + #789, #745
+static Food + #790, #404
+static Food + #791, #853
+static Food + #792, #497
+static Food + #793, #819
+static Food + #794, #1093
+static Food + #795, #221
+static Food + #796, #632
+static Food + #797, #278
+static Food + #798, #765
+static Food + #799, #484
+static Food + #800, #1050
+static Food + #801, #170
+static Food + #802, #535
+static Food + #803, #813
+static Food + #804, #749
+static Food + #805, #171
+static Food + #806, #861
+static Food + #807, #647
+static Food + #808, #656
+static Food + #809, #385
+static Food + #810, #494
+static Food + #811, #1057
+static Food + #812, #517
+static Food + #813, #718
+static Food + #814, #610
+static Food + #815, #243
+static Food + #816, #253
+static Food + #817, #1009
+static Food + #818, #162
+static Food + #819, #543
+static Food + #820, #690
+static Food + #821, #826
+static Food + #822, #445
+static Food + #823, #738
+static Food + #824, #184
+static Food + #825, #872
+static Food + #826, #505
+static Food + #827, #1013
+static Food + #828, #453
+static Food + #829, #659
+static Food + #830, #1025
+static Food + #831, #574
+static Food + #832, #499
+static Food + #833, #538
+static Food + #834, #213
+static Food + #835, #1018
+static Food + #836, #681
+static Food + #837, #298
+static Food + #838, #371
+static Food + #839, #592
+static Food + #840, #1045
+static Food + #841, #699
+static Food + #842, #373
+static Food + #843, #544
+static Food + #844, #812
+static Food + #845, #788
+static Food + #846, #285
+static Food + #847, #401
+static Food + #848, #553
+static Food + #849, #292
+static Food + #850, #482
+static Food + #851, #606
+static Food + #852, #209
+static Food + #853, #618
+static Food + #854, #793
+static Food + #855, #776
+static Food + #856, #307
+static Food + #857, #161
+static Food + #858, #635
+static Food + #859, #193
+static Food + #860, #334
+static Food + #861, #395
+static Food + #862, #662
+static Food + #863, #688
+static Food + #864, #446
+static Food + #865, #182
+static Food + #866, #971
+static Food + #867, #507
+static Food + #868, #203
+static Food + #869, #918
+static Food + #870, #1062
+static Food + #871, #488
+static Food + #872, #834
+static Food + #873, #603
+static Food + #874, #661
+static Food + #875, #222
+static Food + #876, #177
+static Food + #877, #383
+static Food + #878, #1028
+static Food + #879, #888
+static Food + #880, #336
+static Food + #881, #672
+static Food + #882, #256
+static Food + #883, #470
+static Food + #884, #434
+static Food + #885, #558
+static Food + #886, #501
+static Food + #887, #1055
+static Food + #888, #321
+static Food + #889, #449
+static Food + #890, #1112
+static Food + #891, #489
+static Food + #892, #722
+static Food + #893, #1046
+static Food + #894, #361
+static Food + #895, #1076
+static Food + #896, #814
+static Food + #897, #527
+static Food + #898, #339
+static Food + #899, #296
+static Food + #900, #838
+static Food + #901, #903
+static Food + #902, #742
+static Food + #903, #1053
+static Food + #904, #582
+static Food + #905, #671
+static Food + #906, #613
+static Food + #907, #233
+static Food + #908, #996
+static Food + #909, #183
+static Food + #910, #1115
+static Food + #911, #684
