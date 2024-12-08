@@ -64,7 +64,7 @@ StartGame:
     call PrintScreen           ; Imprime a cena do jogo na cor azul claro
     loadn r5, #0               
     store Length, r5
-	loadn r5, #1               
+    loadn r5, #0               
     store alreadyHavePowerUp, r5
     loadn r0, #700            
     store SnakePos, r0         ; Armazena a posição na variável
@@ -198,7 +198,6 @@ MoveSnake:
     push r1
     push r2
 
-    ; TODO: Add comparision with new power up
     call RecalculateSnakePos  
     load r0, SnakePos         ;
     load r2, FoodPos         
@@ -554,7 +553,7 @@ PrintLifeSavier:
     push r2
     push r3
 
-    loadn r1, #3151            ; Caractere 'O' azul
+    loadn r1, #2907            ; Caractere '[' amarelo
     loadn r2, #PowerUp         
     load r3, PowerUpIndex     
     add r0, r2, r3            
@@ -564,6 +563,8 @@ PrintLifeSavier:
     inc r3                   
     store PowerUpIndex, r3
     store PowerUpPos, r2
+    loadn r1, #1
+    store alreadyHavePowerUp, r1
 
     pop r3
     pop r2
@@ -578,8 +579,14 @@ decreaseSnake:
     push r1
     push r2
 
+    loadn r1, #2
     load r0, SnakeTailPos     
-    load r2, Length          
+    load r2, Length ; Não execute a diminuição caso o tamanho da cobra seja menor que 2
+    cmp r1, r2
+    jeg skipDecreaseSnake
+
+    loadn r1, #0
+    store alreadyHavePowerUp, r1          
     loadn r1, #SnakeBody
     dec r2  
     sub r1, r1, r2           
@@ -591,12 +598,22 @@ decreaseSnake:
     pop r0
     jmp MoveSnake_Skip
 
+skipDecreaseSnake:
+    store Length, r2      
+    jmp MoveSnake
+
+
 
 triggerPowerUp:
     push r0
     push r1
     push r2
     push r3
+
+    load r3, alreadyHavePowerUp
+    loadn r0, #1
+    cmp r0, r3
+    jeq SkipPowerUp        ; Verifica se existe um power up na tela
 
     ; Carregar os valores das pontuações
     load r0, UnitScore	
@@ -618,6 +635,10 @@ triggerPowerUp:
     mul r2, r2, r3         ; Multiplica as centenas por 100
     add r0, r0, r2         ; Soma centenas ao total
 
+    loadn r3, #0
+    cmp r0, r3
+    jeq SkipPowerUp     ; Verifica se o score é zero
+
     ; Verificar múltiplo de 5
     loadn r1, #2
     mod r0, r0, r1         ; Resto da divisão por 5
@@ -628,7 +649,7 @@ triggerPowerUp:
 
     call PrintLifeSavier   ; Chama o power-up
 
-SkipPowerUp:
+SkipPowerUp:    
     pop r3
     pop r2
     pop r1
@@ -638,8 +659,8 @@ SkipPowerUp:
 
 
 TelaJogo0  : string "|======================================|"
-TelaJogo1  : string "|                                      |"
-TelaJogo2  : string "|                                      |"
+TelaJogo1  : string "|SCORE                                 |"
+TelaJogo2  : string "|______________________________________|"
 TelaJogo4  : string "|                                      |"
 TelaJogo5  : string "|                                      |"
 TelaJogo6  : string "|                                      |"
@@ -793,10 +814,10 @@ TelaPreJogo27: string "|                                      |"
 TelaPreJogo28: string "|                                      |"
 TelaPreJogo29: string "========================================"
 
-static PowerUp + #0, #820
-static PowerUp + #1, #700
-static PowerUp + #2, #800
-static PowerUp + #3, #900
+static PowerUp + #0, #165
+static PowerUp + #1, #331
+static PowerUp + #2, #515
+static PowerUp + #3, #1047
 
 static Food + #0, #536
 static Food + #1, #1097
