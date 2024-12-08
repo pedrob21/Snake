@@ -22,9 +22,12 @@ SnakePos: var #1               ; Posição atual da cobra
 SnakeTailPos: var #1           ; Posição anterior da cobra
 FoodIndex: var #1              ; Índice para o array de posição da comida
 FoodPos: var #1                ; Posição atual da comida
+PowerUpPos: var #1                ; Posição atual do Power Up
+PowerUpIndex: var #1              ; Índice para o array de posição do Power Up
 LastKey: var #1                ; Última tecla AWSD pressionada, usada para manter o movimento
 Length: var #1                 ; Comprimento da cobra
-SnakeBody: var #300            ; A	rmazena as posições do corpo da cobra
+SnakeBody: var #300            ; Armazena as posições do corpo da cobra
+alreadyHavePowerUp: var #1
 
 UnitScore: var #1
 TenScore: var #1
@@ -36,6 +39,8 @@ static TenScore, #'0'
 static HundredScore, #'0'
 
 Food: var #1200
+PowerUp: var #4
+
 
 InitGame:
     MenuScreen:
@@ -59,6 +64,8 @@ StartGame:
     call PrintScreen           ; Imprime a cena do jogo na cor azul claro
     loadn r5, #0               
     store Length, r5
+	loadn r5, #1               
+    store alreadyHavePowerUp, r5
     loadn r0, #700            
     store SnakePos, r0         ; Armazena a posição na variável
     dec r0
@@ -70,8 +77,9 @@ StartGame:
 
 GameLoop:
     call MoveSnake             
-    call DrawSnake          
-    call Delay               
+    call DrawSnake
+    call Delay
+    call triggerPowerUp         
     jmp GameLoop           
 
 DeathScreen:
@@ -190,11 +198,15 @@ MoveSnake:
     push r1
     push r2
 
+    ; TODO: Add comparision with new power up
     call RecalculateSnakePos  
     load r0, SnakePos         ;
     load r2, FoodPos         
     cmp r0, r2
-    jeq IncreaseSnake       
+    jeq IncreaseSnake
+    load r2, PowerUpPos         
+    cmp r0, r2
+    jeq decreaseSnake        
     call CheckCollision  
 
     MoveSnake_Skip:
@@ -426,7 +438,6 @@ PrintFood:
     pop r0
     rts
 
-
 Delay:
     push r0
     push r1
@@ -535,6 +546,96 @@ DisplayScoreDeathScreen:
     outchar r0, r1
 
     rts
+
+PrintLifeSavier:
+    ; Power up that will reduce the snake length
+    push r0
+    push r1
+    push r2
+    push r3
+
+    loadn r1, #3151            ; Caractere 'O' azul
+    loadn r2, #PowerUp         
+    load r3, PowerUpIndex     
+    add r0, r2, r3            
+    loadi r2, r0              
+    outchar r1, r2          
+
+    inc r3                   
+    store PowerUpIndex, r3
+    store PowerUpPos, r2
+
+    pop r3
+    pop r2
+    pop r1
+    pop r0
+    rts
+
+
+
+decreaseSnake:
+    push r0
+    push r1
+    push r2
+
+    load r0, SnakeTailPos     
+    load r2, Length          
+    loadn r1, #SnakeBody
+    dec r2  
+    sub r1, r1, r2           
+    storei r1, r0            
+    store Length, r2      
+
+    pop r2
+    pop r1
+    pop r0
+    jmp MoveSnake_Skip
+
+
+triggerPowerUp:
+    push r0
+    push r1
+    push r2
+    push r3
+
+    ; Carregar os valores das pontuações
+    load r0, UnitScore	
+    load r1, TenScore
+    load r2, HundredScore
+
+    loadn r3, #'0'        ; ASCII de '0'
+
+    ; Converter caracteres para números
+    sub r0, r0, r3        
+    sub r1, r1, r3        
+    sub r2, r2, r3        
+
+    loadn r3, #10
+    mul r1, r1, r3         ; Multiplica as dezenas por 10
+    add r0, r0, r1         ; Soma unidade e dezenas
+
+    loadn r3, #100
+    mul r2, r2, r3         ; Multiplica as centenas por 100
+    add r0, r0, r2         ; Soma centenas ao total
+
+    ; Verificar múltiplo de 5
+    loadn r1, #2
+    mod r0, r0, r1         ; Resto da divisão por 5
+    loadn r3, #0
+    cmp r0, r3
+    jne SkipPowerUp        ; Se não for múltiplo de 5, pula
+
+
+    call PrintLifeSavier   ; Chama o power-up
+
+SkipPowerUp:
+    pop r3
+    pop r2
+    pop r1
+    pop r0
+    jmp GameLoop
+
+
 
 TelaJogo0  : string "|======================================|"
 TelaJogo1  : string "|                                      |"
@@ -691,6 +792,11 @@ TelaPreJogo26: string "|                                      |"
 TelaPreJogo27: string "|                                      |"
 TelaPreJogo28: string "|                                      |"
 TelaPreJogo29: string "========================================"
+
+static PowerUp + #0, #820
+static PowerUp + #1, #700
+static PowerUp + #2, #800
+static PowerUp + #3, #900
 
 static Food + #0, #536
 static Food + #1, #1097
