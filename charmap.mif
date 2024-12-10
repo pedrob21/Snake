@@ -1,7 +1,12 @@
+; Definição de parâmetros da memória
+
 DEPTH=2048;
 WIDTH=8;
 ADDRESS_RADIX=UNS;
 DATA_RADIX=BIN;
+
+; Declaração dos conteúdos da memória
+
 CONTENT BEGIN
 [0..263]:00000000;
 [264..268]:00011000;
@@ -490,6 +495,8 @@ CONTENT BEGIN
 [992..998]:00011000;
 999:00000000;
 [1000..1007]:11111111;
-[1008..1015]:00000111;
+; trecho de finalização
+[1008..1015]:00000111; 
 [1016..2047]:00000000;
 END;
+
