@@ -27,6 +27,10 @@ LastKey: var #1                ; Última tecla AWSD pressionada, usada para mant
 Length: var #1                 ; Comprimento da cobra
 Corpo: var #300            ; Armazena as posições do corpo da cobra
 
+alreadyHavePowerUp: var #1
+PowerUpPos: var #1                ; Posição atual do Power Up
+PowerUpIndex: var #1              ; Índice para o array de posição do Power Up
+PowerUp: var #4
 
 ; placar
 
@@ -73,6 +77,8 @@ Inicio:
     call PrintScreen           ; Imprime a cena do jogo na cor azul claro
     loadn r5, #0               
     store Length, r5
+    loadn r5, #0               
+    store alreadyHavePowerUp, r5
     loadn r0, #700            
     store PosicaoCobra, r0         ; Armazena a posição na variável
     dec r0
@@ -86,7 +92,8 @@ Inicio:
 GameLoop: ; loop principal do jogo
     call Andar             
     call DrawSnake          
-    call Delay               
+    call Delay
+    call triggerPowerUp               
     jmp GameLoop           
 
 
@@ -257,7 +264,10 @@ Andar: ; movimentação da cobra
     load r0, PosicaoCobra         
     load r2, MacasPos         
     cmp r0, r2
-    jeq IncreaseSnake       
+    jeq IncreaseSnake
+    load r2, PowerUpPos         
+    cmp r0, r2
+    jeq decreaseSnake            
     call CheckCollision  
 
 
@@ -527,7 +537,7 @@ PrintFake:
     push r3
 
 
-    loadn r1, #2664            
+    loadn r1, #2880            
     loadn r2, #Fake         
     load r3, FakeIndex     
     add r0, r2, r3            
@@ -676,12 +686,117 @@ DisplayScoreTelaMorte:
     loadn r1, #856         
     outchar r0, r1
 
-
     rts
+
+
+PrintLifeSavier:
+    ; Power up that will reduce the snake length
+    push r0
+    push r1
+    push r2
+    push r3
+
+    loadn r1, #2907            ; Caractere '[' amarelo
+    loadn r2, #PowerUp         
+    load r3, PowerUpIndex     
+    add r0, r2, r3            
+    loadi r2, r0              
+    outchar r1, r2          
+
+    inc r3                   
+    store PowerUpIndex, r3
+    store PowerUpPos, r2
+    loadn r1, #1
+    store alreadyHavePowerUp, r1
+
+    pop r3
+    pop r2
+    pop r1
+    pop r0
+    rts
+
+
+
+decreaseSnake:
+    push r0
+    push r1
+    push r2
+
+    load r0, PosicaoRabo     
+    load r2, Length ; Não execute a diminuição caso o tamanho da cobra seja menor que 2
+
+    call UpdateScore
+    loadn r1, #0
+    store alreadyHavePowerUp, r1          
+    loadn r1, #Corpo
+    dec r2  
+    sub r1, r1, r2           
+    storei r1, r0            
+    store Length, r2      
+
+    pop r2
+    pop r1
+    pop r0
+    jmp Andar_Skip
+
+
+triggerPowerUp:
+    push r0
+    push r1
+    push r2
+    push r3
+
+    load r3, alreadyHavePowerUp
+    loadn r0, #1
+    cmp r0, r3
+    jeq SkipPowerUp        ; Verifica se existe um power up na tela
+
+    ; Carregar os valores das pontuações
+    load r0, Unidade	
+    load r1, TenScore
+    load r2, Centena
+
+    loadn r3, #'0'        ; ASCII de '0'
+
+    ; Converter caracteres para números
+    sub r0, r0, r3        
+    sub r1, r1, r3        
+    sub r2, r2, r3        
+
+    loadn r3, #10
+    mul r1, r1, r3         ; Multiplica as dezenas por 10
+    add r0, r0, r1         ; Soma unidade e dezenas
+
+    loadn r3, #100
+    mul r2, r2, r3         ; Multiplica as centenas por 100
+    add r0, r0, r2         ; Soma centenas ao total
+
+    loadn r3, #0
+    cmp r0, r3
+    jeq SkipPowerUp     ; Verifica se o score é zero
+
+    ; Verificar múltiplo de 5
+    loadn r1, #5
+    mod r0, r0, r1         ; Resto da divisão por 5
+    loadn r3, #0
+    cmp r0, r3
+    jne SkipPowerUp        ; Se não for múltiplo de 5, pula
+
+
+    call PrintLifeSavier   ; Chama o power-up
+
+SkipPowerUp:    
+    pop r3
+    pop r2
+    pop r1
+    pop r0
+    jmp GameLoop
+
+
 ; tela principal do jogo
 TelaJogo0  : string "|======================================|"
-TelaJogo1  : string "|                                      |"
-TelaJogo2  : string "|                                      |"
+TelaJogo1  : string "|MACAS COMIDAS                         |"
+TelaJogo2  : string "|--------------------------------------|"
 TelaJogo3  : string "|                                      |"
 TelaJogo4  : string "|   x                                  |"
 TelaJogo5  : string "|                                      |"
@@ -736,7 +851,7 @@ TelaApresentacao19: string "        S  - MOVE PARA BAIXO            "
 TelaApresentacao20: string "        A  - MOVE PARA ESQUERDA         "
 TelaApresentacao21: string "        D  - MOVE PARA DIREITA          "
 TelaApresentacao22: string "                                        "
-TelaApresentacao23: string "       NEM *TUDO* EH O QUE PARECE h     "
+TelaApresentacao23: string "       NEM *TUDO* EH O QUE PARECE       "
 TelaApresentacao24: string "            CUIDADO COM OS x            "
 TelaApresentacao25: string "                                        "
 TelaApresentacao26: string "               BOM JOGO!                "
@@ -809,10 +924,14 @@ TelaAgradecimento27: string "                                        "
 TelaAgradecimento28: string "                                        "
 TelaAgradecimento29: string "                                        "
 
+static PowerUp + #0, #265
+static PowerUp + #1, #331
+static PowerUp + #2, #515
+static PowerUp + #3, #1047
 
 static Fake + #0, #537
 static Fake + #1, #1098
-static Fake + #2, #104
+static Fake + #2, #204
 static Fake + #3, #622
 static Fake + #4, #456
 static Fake + #5, #1088
@@ -834,7 +953,7 @@ static Fake + #20, #931
 static Fake + #21, #762
 static Fake + #22, #843
 static Fake + #23, #394
-static Fake + #24, #165
+static Fake + #24, #265
 static Fake + #25, #996
 static Fake + #26, #387
 static Fake + #27, #458
