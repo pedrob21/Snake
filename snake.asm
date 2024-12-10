@@ -154,28 +154,49 @@ CheckCollision:
     push r3
     push r4
     push r5
+    push r6
+    push r7
 
     load r0, PosicaoCobra         ; Carrega a posição da cobra em R0
-    loadn r1, #Corpo      ; Carrega o endereço do vetor dos corpos da cobra
-    loadn r2, #0              
-    load r4, Length           
-    loadn r5, #'|'            ; Carrega '|' para paredes
-    load r6, FakePos
-    loadn r7, #2664
+    loadn r1, #Corpo              ; Carrega o endereço do vetor dos corpos da cobra
+    loadn r2, #0                  ; Inicializa o índice para o loop
+    load r4, Length               ; Carrega o comprimento da cobra
+    loadn r5, #'|'                ; Carrega '|' (paredes)
+    load r6, FakePos              ; Carrega a posição fake
 
     CollisionLoop:
-        cmp r2, r4           
-        jeq CollisionEnd
-        loadi r3, r1          
-        cmp r0, r3           
-        jeq TelaMorte 
-        cmp r0, r6
-        jeq TelaMorte
-        inc r2              
-        inc r1            
+        cmp r2, r4               
+        jeq CheckFixedPositions   ; Se terminou o loop, verifica as posições fixas
+
+        loadi r3, r1              
+        cmp r0, r3               
+        jeq TelaMorte             ; Morre se a cobra tocar em si mesma
+
+        cmp r0, r6               
+        jeq TelaMorte             ; Morre se tocar na fake
+
+        inc r2                   
+        inc r1                   
         jmp CollisionLoop
 
+    CheckFixedPositions:
+
+        loadn r7, #256
+        cmp r0, r7
+        jeq TelaMorte             ; Morre se tocar na posição #256
+
+        loadn r7, #580
+        cmp r0, r7
+        jeq TelaMorte             ; Morre se tocar na posição #580
+
+        loadn r7, #915
+        cmp r0, r7
+        jeq TelaMorte             ; Morre se tocar na posição #915
+        
+
     CollisionEnd:
+        pop r7
+        pop r6
         pop r5
         pop r4
         pop r3
@@ -184,13 +205,14 @@ CheckCollision:
         pop r0
         rts
 
+
 Andar:
     push r0
     push r1
     push r2
     call Delay
     call RecalculatePosicaoCobra  
-    load r0, PosicaoCobra         ;
+    load r0, PosicaoCobra         
     load r2, MacasPos         
     cmp r0, r2
     jeq IncreaseSnake       
@@ -561,18 +583,18 @@ DisplayScoreTelaMorte:
 TelaJogo0  : string "|======================================|"
 TelaJogo1  : string "|                                      |"
 TelaJogo2  : string "|                                      |"
+TelaJogo3  : string "|                                      |"
 TelaJogo4  : string "|                                      |"
 TelaJogo5  : string "|                                      |"
-TelaJogo6  : string "|                                      |"
-TelaJogo3  : string "|                                      |"
+TelaJogo6  : string "|               x                      |"
 TelaJogo7  : string "|                                      |"
 TelaJogo8  : string "|                                      |"
 TelaJogo9  : string "|                                      |"
-TelaJogo10 : string "|                                      |"
+TelaJogo10 : string "|                                      |" 
 TelaJogo11 : string "|                                      |"
 TelaJogo12 : string "|                                      |"
 TelaJogo13 : string "|                                      |"
-TelaJogo14 : string "|                                      |"
+TelaJogo14 : string "|                   x                  |"
 TelaJogo15 : string "|                                      |"
 TelaJogo16 : string "|                                      |"
 TelaJogo17 : string "|                                      |"
@@ -580,7 +602,7 @@ TelaJogo18 : string "|                                      |"
 TelaJogo19 : string "|                                      |"
 TelaJogo20 : string "|                                      |"
 TelaJogo21 : string "|                                      |"
-TelaJogo22 : string "|                                      |"
+TelaJogo22 : string "|                                  x   |" 
 TelaJogo23 : string "|                                      |"
 TelaJogo24 : string "|                                      |"
 TelaJogo25 : string "|                                      |"
@@ -588,6 +610,7 @@ TelaJogo26 : string "|                                      |"
 TelaJogo27 : string "|                                      |"
 TelaJogo28 : string "|                                      |"
 TelaJogo29 : string "|======================================|"
+
 
 TelaApresentacao00: string "                                        "
 TelaApresentacao01: string "                                        "
