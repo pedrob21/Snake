@@ -160,13 +160,16 @@ CheckCollision:
     loadn r2, #0              
     load r4, Length           
     loadn r5, #'|'            ; Carrega '|' para paredes
+    load r6, FakePos
 
     CollisionLoop:
         cmp r2, r4           
         jeq CollisionEnd
         loadi r3, r1          
         cmp r0, r3           
-        jeq DeathScreen     
+        jeq DeathScreen 
+        cmp r0, r6
+        jeq DeathScreen 
         inc r2              
         inc r1            
         jmp CollisionLoop
