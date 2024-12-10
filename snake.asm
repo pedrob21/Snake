@@ -1,6 +1,5 @@
 jmp InitGame
 
-
 ; 0 branco							0000 0000
 ; 256 marrom						0001 0000
 ; 512 verde							0010 0000
@@ -41,7 +40,7 @@ InitGame:
     MenuScreen:
         call ClearScreen      
         loadn r1, #TelaApresentacao00 
-        loadn r2, #1280        ; Cor roxa
+        loadn r2, #2816        ; Cor roxa
         call PrintScreen     
 
     ; Loop do menu
@@ -49,13 +48,13 @@ InitGame:
         loadn r3, #13        
         inchar r4            
         cmp r4, r3            
-        jeq PreGameScreen         
+        jeq StartGame         
         jmp MenuLoop         
 
 StartGame:
     call ClearScreen          
     loadn r1, #TelaJogo0      
-    loadn r2, #1536            ; Cor azul claro
+    loadn r2, #2816            ; Cor azul claro
     call PrintScreen           ; Imprime a cena do jogo na cor azul claro
     loadn r5, #0               
     store Length, r5
@@ -77,7 +76,7 @@ GameLoop:
 DeathScreen:
     call ClearScreen         
     loadn r1, #TelaPosColisao00 ; Endereço onde a cena do menu de morte começa
-    loadn r2, #2304            ; Cor vermelha
+    loadn r2, #4608           ; Cor vermelha
     call PrintScreen          
     call DisplayScoreDeathScreen
 
@@ -88,16 +87,8 @@ DeathLoop:
     cmp r4, r3                 ; Verifica se é 'n'
     jeq endGame               
     cmp r4, r2                 ; Verifica se é 'y'
-    jeq PreGameScreen         
-    jmp DeathLoop            
-
-PreGameScreen:
-    call ClearScreen         
-    loadn r1, #TelaPreJogo00   ; Endereço da tela de pré-jogo
-    loadn r2, #1280           
-    call PrintScreen         
-    call DelayInitScreen    
-    jmp StartGame              
+    jeq StartGame         
+    jmp DeathLoop                   
 
 endGame:
     call ClearScreen        
@@ -106,7 +97,7 @@ endGame:
 
 printThankYouScreen:
     loadn r1, #TelaAgradecimento00
-    loadn r2, #1280                ; Cor da impressão. Cor prata
+    loadn r2, #2816                ; Cor da impressão. Cor prata
     call PrintScreen
     rts
 
@@ -132,7 +123,7 @@ DrawSnake:
         loadi r3, r2           
         outchar r1, r0        
         outchar r5, r3         ; Apaga a posição anterior
-        loadn r1, #2409        ; Define o corpo com o caractere 'i' vermelho
+        loadn r1, #2419        ; Define o corpo com o caractere 'i' vermelho
         storei r2, r0          ; Armazena a posição atual no vetor SnakeBody
         mov r0, r3            
         cmp r4, r6            
@@ -165,7 +156,7 @@ CheckCollision:
     loadn r1, #SnakeBody      ; Carrega o endereço do vetor dos corpos da cobra
     loadn r2, #0              
     load r4, Length           
-    loadn r5, #'*'            ; Carrega '*' para paredes
+    loadn r5, #'|'            ; Carrega '*' para paredes
 
     CollisionLoop:
         cmp r2, r4           
@@ -410,7 +401,7 @@ PrintFood:
     push r2
     push r3
 
-    loadn r1, #2624            ; Caractere @ vermelho
+    loadn r1, #4672            ; Caractere @ vermelho
     loadn r2, #Food         
     load r3, FoodIndex     
     add r0, r2, r3            ; Calcula a posição da comida
@@ -576,15 +567,15 @@ TelaApresentacao04: string "                                        "
 TelaApresentacao05: string "                                        "
 TelaApresentacao06: string "            JOGO CRIADO POR:            "
 TelaApresentacao07: string "                                        "
-TelaApresentacao08: string "       DAVI                             "
-TelaApresentacao09: string "       LUCAS                            "
-TelaApresentacao10: string "       PEDRO                            "
-TelaApresentacao11: string "       MARCEL HENRIQUE R BATISTA        "
+TelaApresentacao08: string "       DAVI MOREIRA                     "
+TelaApresentacao09: string "       LUCAS MICHAEL                    "
+TelaApresentacao10: string "       PEDRO BERNARDO                   "
+TelaApresentacao11: string "       MARCEL HENRIQUE                  "
 TelaApresentacao12: string "                                        "
 TelaApresentacao13: string "                                        "
-TelaApresentacao14: string "      ESTE JOGO E O CLASSICO SNAKE      "
+TelaApresentacao14: string "                                        "
 TelaApresentacao15: string "                                        "
-TelaApresentacao16: string "    OS COMANDO BASICOS DO JOGO SAO:     "
+TelaApresentacao16: string "                COMANDOS:               "
 TelaApresentacao17: string "                                        "
 TelaApresentacao18: string "        W  - MOVE PARA CIMA             "
 TelaApresentacao19: string "        S  - MOVE PARA BAIXO            "
@@ -592,11 +583,11 @@ TelaApresentacao20: string "        A  - MOVE PARA ESQUERDA         "
 TelaApresentacao21: string "        D  - MOVE PARA DIREITA          "
 TelaApresentacao22: string "                                        "
 TelaApresentacao23: string "                                        "
-TelaApresentacao24: string "            ESPERO QUE GOSTE            "
+TelaApresentacao24: string "                                        "
 TelaApresentacao25: string "                                        "
 TelaApresentacao26: string "               BOM JOGO!                "
 TelaApresentacao27: string "                                        "
-TelaApresentacao28: string "  PRESSIONE QUALQUER TECLA PARA COMECAR "
+TelaApresentacao28: string "       PRESSIONE ENTER PARA COMECAR     "
 TelaApresentacao29: string "                                        "
 
 
@@ -612,7 +603,7 @@ TelaPosColisao08: string "                                        "
 TelaPosColisao09: string "                                        "
 TelaPosColisao10: string "                                        "
 TelaPosColisao11: string "                                        "
-TelaPosColisao12: string "         MUITO RUIM, VOCE COLIDIU       "
+TelaPosColisao12: string "              VOCE PERDEU!!!            "
 TelaPosColisao13: string "                                        "
 TelaPosColisao14: string "                                        "
 TelaPosColisao15: string "                                        "
@@ -621,7 +612,7 @@ TelaPosColisao17: string "                                        "
 TelaPosColisao18: string "                                        "
 TelaPosColisao19: string "                                        "
 TelaPosColisao20: string "                                        "
-TelaPosColisao21: string "     VOCE COMEU:    Macas               "
+TelaPosColisao21: string "     VOCE COMEU:    MACAS               "
 TelaPosColisao22: string "                                        "
 TelaPosColisao23: string "                                        "
 TelaPosColisao24: string "                                        "
@@ -643,9 +634,9 @@ TelaAgradecimento08: string "                                        "
 TelaAgradecimento09: string "                                        "
 TelaAgradecimento10: string "                                        "
 TelaAgradecimento11: string "                                        "
-TelaAgradecimento12: string "        MUITO OBRIGADO POR JOGAR        "
+TelaAgradecimento12: string "           OBRIGADO POR JOGAR!!!        "
 TelaAgradecimento13: string "                                        "
-TelaAgradecimento14: string "        ESPERO QUE TENHA GOSTADO        "
+TelaAgradecimento14: string "                                        "
 TelaAgradecimento15: string "                                        "
 TelaAgradecimento16: string "                                        "
 TelaAgradecimento17: string "                                        "
@@ -661,37 +652,6 @@ TelaAgradecimento26: string "                                        "
 TelaAgradecimento27: string "                                        "
 TelaAgradecimento28: string "                                        "
 TelaAgradecimento29: string "                                        "
-
-TelaPreJogo00: string "========================================"
-TelaPreJogo01: string "|                                      |"
-TelaPreJogo02: string "|                                      |"
-TelaPreJogo03: string "|                                      |"
-TelaPreJogo04: string "|                                      |"
-TelaPreJogo05: string "|                                      |"
-TelaPreJogo06: string "|                                      |"
-TelaPreJogo07: string "|                                      |"
-TelaPreJogo08: string "|                                      |"
-TelaPreJogo09: string "|            OLHA A JIBOIA             |"
-TelaPreJogo10: string "|                                      |"
-TelaPreJogo11: string "|                                      |"
-TelaPreJogo12: string "|                                      |"
-TelaPreJogo13: string "|                                      |"
-TelaPreJogo14: string "|                                      |"
-TelaPreJogo15: string "|                                      |"
-TelaPreJogo16: string "|                                      |"
-TelaPreJogo17: string "|                                      |"
-TelaPreJogo18: string "|                                      |"
-TelaPreJogo19: string "|                                      |"
-TelaPreJogo20: string "|                                      |"
-TelaPreJogo21: string "|                                      |"
-TelaPreJogo22: string "|                                      |"
-TelaPreJogo23: string "|                                      |"
-TelaPreJogo24: string "|                                      |"
-TelaPreJogo25: string "|                                      |"
-TelaPreJogo26: string "|                                      |"
-TelaPreJogo27: string "|                                      |"
-TelaPreJogo28: string "|                                      |"
-TelaPreJogo29: string "========================================"
 
 static Food + #0, #536
 static Food + #1, #1097
