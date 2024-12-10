@@ -193,6 +193,14 @@ CheckCollision:
         cmp r0, r7
         jeq TelaMorte             ; Morre se tocar na posição #915
         
+        loadn r7, #164
+        cmp r0, r7
+        jeq TelaMorte
+        
+        loadn r7, #1086
+        cmp r0, r7
+        jeq TelaMorte
+        
 
     CollisionEnd:
         pop r7
@@ -584,7 +592,7 @@ TelaJogo0  : string "|======================================|"
 TelaJogo1  : string "|                                      |"
 TelaJogo2  : string "|                                      |"
 TelaJogo3  : string "|                                      |"
-TelaJogo4  : string "|                                      |"
+TelaJogo4  : string "|   x                                  |"
 TelaJogo5  : string "|                                      |"
 TelaJogo6  : string "|               x                      |"
 TelaJogo7  : string "|                                      |"
@@ -607,7 +615,7 @@ TelaJogo23 : string "|                                      |"
 TelaJogo24 : string "|                                      |"
 TelaJogo25 : string "|                                      |"
 TelaJogo26 : string "|                                      |"
-TelaJogo27 : string "|                                      |"
+TelaJogo27 : string "|     x                                |"
 TelaJogo28 : string "|                                      |"
 TelaJogo29 : string "|======================================|"
 
@@ -635,8 +643,8 @@ TelaApresentacao19: string "        S  - MOVE PARA BAIXO            "
 TelaApresentacao20: string "        A  - MOVE PARA ESQUERDA         "
 TelaApresentacao21: string "        D  - MOVE PARA DIREITA          "
 TelaApresentacao22: string "                                        "
-TelaApresentacao23: string "        NEM TUDO EH O QUE PARECE h      "
-TelaApresentacao24: string "                                        "
+TelaApresentacao23: string "       NEM *TUDO* EH O QUE PARECE h     "
+TelaApresentacao24: string "            CUIDADO COM OS x            "
 TelaApresentacao25: string "                                        "
 TelaApresentacao26: string "               BOM JOGO!                "
 TelaApresentacao27: string "                                        "
