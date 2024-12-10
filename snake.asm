@@ -1,5 +1,6 @@
 jmp Comecar
 
+
 ; 0 branco							0000 0000
 ; 256 marrom						0001 0000
 ; 512 verde							0010 0000
@@ -17,34 +18,44 @@ jmp Comecar
 ; 3584 aqua							1110 0000
 ; 3840 branco						1111 0000
 
+
 PosicaoCobra: var #1               ; Posição atual da cobra
 PosicaoRabo: var #1           ; Posição anterior da cobra
 MacasIndex: var #1              ; Índice para o array de posição da comida
 MacasPos: var #1                ; Posição atual da comida
 LastKey: var #1                ; Última tecla AWSD pressionada, usada para manter o movimento
 Length: var #1                 ; Comprimento da cobra
-Corpo: var #300            ; A	rmazena as posições do corpo da cobra
+Corpo: var #300            ; Armazena as posições do corpo da cobra
+
+
+; placar
+
 
 Unidade: var #1
 TenScore: var #1
 Centena: var #1
 
+
 FakeIndex: var #1              
 FakePos: var #1
+
 
 static Unidade, #'0'
 static TenScore, #'0'
 static Centena, #'0'
 
+
 Macas: var #1200
 Fake: var #1500
 
+
 Comecar:
-    MenuScreen:
+    MenuScreen: ; tela de menu inicial
         call ClearScreen      
         loadn r1, #TelaApresentacao00 
         loadn r2, #2816        ; Cor roxa
         call PrintScreen     
+
 
     ; Loop do menu
     MenuLoop:
@@ -53,6 +64,7 @@ Comecar:
         cmp r4, r3            
         jeq Inicio         
         jmp MenuLoop         
+
 
 Inicio:
     call ClearScreen          
@@ -70,11 +82,13 @@ Inicio:
     call PrintMacas             
     call ResetScore            
 
-GameLoop:
+
+GameLoop: ; loop principal do jogo
     call Andar             
     call DrawSnake          
     call Delay               
     jmp GameLoop           
+
 
 TelaMorte:
     call ClearScreen         
@@ -82,6 +96,7 @@ TelaMorte:
     loadn r2, #4608           ; Cor vermelha
     call PrintScreen          
     call DisplayScoreTelaMorte
+
 
 LoopMorte:
     loadn r2, #121             ; Código ASCII da tecla 'y'
@@ -93,16 +108,19 @@ LoopMorte:
     jeq Inicio         
     jmp LoopMorte                   
 
-endGame:
+
+endGame: ; limpa a tela e exibe uma tela de agradecimento
     call ClearScreen        
     call printThankYouScreen
     halt
+
 
 printThankYouScreen:
     loadn r1, #TelaAgradecimento00
     loadn r2, #2816                ; Cor da impressão. Cor prata
     call PrintScreen
     rts
+
 
 ; Função para desenhar a cobra
 DrawSnake:
@@ -114,6 +132,7 @@ DrawSnake:
     push r5
     push r6
 
+
     loadn r1, #368            ; Usa o caractere 'p' para representar a cobra
     loadn r5, #' '   	       ; Também carrega ' ' para apagar o corpo
     load r0, PosicaoCobra         
@@ -121,6 +140,7 @@ DrawSnake:
     loadn r4, #0             
     load r6, Length
     call Delay
+
 
     DrawSnakeLoop:
         loadi r3, r2           
@@ -135,6 +155,7 @@ DrawSnake:
         inc r2
         jmp DrawSnakeLoop
 
+
     DrawSnakeEnd:
         store PosicaoRabo, r3 ; Armazena a posição da cauda
         pop r6                
@@ -145,6 +166,7 @@ DrawSnake:
         pop r1
         pop r0
         rts
+
 
 ; Função para verificar colisão
 CheckCollision:
@@ -157,6 +179,7 @@ CheckCollision:
     push r6
     push r7
 
+
     load r0, PosicaoCobra         ; Carrega a posição da cobra em R0
     loadn r1, #Corpo              ; Carrega o endereço do vetor dos corpos da cobra
     loadn r2, #0                  ; Inicializa o índice para o loop
@@ -164,30 +187,38 @@ CheckCollision:
     loadn r5, #'|'                ; Carrega '|' (paredes)
     load r6, FakePos              ; Carrega a posição fake
 
+
     CollisionLoop:
         cmp r2, r4               
         jeq CheckFixedPositions   ; Se terminou o loop, verifica as posições fixas
+
 
         loadi r3, r1              
         cmp r0, r3               
         jeq TelaMorte             ; Morre se a cobra tocar em si mesma
 
+
         cmp r0, r6               
         jeq TelaMorte             ; Morre se tocar na fake
+
 
         inc r2                   
         inc r1                   
         jmp CollisionLoop
 
-    CheckFixedPositions:
+
+    CheckFixedPositions: ; verifica colisões com objetos fixas predefinidas do mapa
+
 
         loadn r7, #256
         cmp r0, r7
         jeq TelaMorte             ; Morre se tocar na posição #256
 
+
         loadn r7, #580
         cmp r0, r7
         jeq TelaMorte             ; Morre se tocar na posição #580
+
 
         loadn r7, #915
         cmp r0, r7
@@ -202,6 +233,7 @@ CheckCollision:
         jeq TelaMorte
         
 
+
     CollisionEnd:
         pop r7
         pop r6
@@ -214,7 +246,9 @@ CheckCollision:
         rts
 
 
-Andar:
+
+
+Andar: ; movimentação da cobra
     push r0
     push r1
     push r2
@@ -226,13 +260,15 @@ Andar:
     jeq IncreaseSnake       
     call CheckCollision  
 
+
     Andar_Skip:
         pop r2
         pop r1
         pop r0
         rts
 
-RecalculatePosicaoCobra:
+
+RecalculatePosicaoCobra: ; calcula a posição da cobra baseado na tecla pressionada
     push r0
     push r1
     push r2
@@ -240,8 +276,10 @@ RecalculatePosicaoCobra:
     push r4
     push r5
 
+
     load r0, PosicaoCobra        
     inchar r1                 
+
 
     loadn r2, #'a'
     cmp r1, r2
@@ -258,6 +296,7 @@ RecalculatePosicaoCobra:
     loadn r2, #'s'
     cmp r1, r2
     jeq MoveDown
+
 
     ; Mantém o movimento na mesma direção
     loadn r2, #'a'
@@ -277,7 +316,8 @@ RecalculatePosicaoCobra:
     cmp r1, r2
     jeq MoveDown
 
-    RecalculatePos_End:
+
+    RecalculatePos_End: ; finaliza o calculo da posição da cobra
         store PosicaoCobra, r0   
         pop r5
         pop r4
@@ -286,6 +326,7 @@ RecalculatePosicaoCobra:
         pop r1
         pop r0
         rts
+
 
     MoveLeft:
         loadn r1, #40
@@ -302,6 +343,7 @@ RecalculatePosicaoCobra:
         store LastKey, r3
         jmp RecalculatePos_End
 
+
     MoveRight:
         loadn r1, #40
         loadn r2, #38
@@ -317,6 +359,7 @@ RecalculatePosicaoCobra:
         store LastKey, r3
         jmp RecalculatePos_End
 
+
     MoveUp:
         loadn r1, #160
         cmp r0, r1            
@@ -330,6 +373,7 @@ RecalculatePosicaoCobra:
         loadn r3, #'w'
         store LastKey, r3
         jmp RecalculatePos_End
+
 
     MoveDown:
         loadn r1, #1119
@@ -345,10 +389,12 @@ RecalculatePosicaoCobra:
         store LastKey, r3
         jmp RecalculatePos_End
 
-IncreaseSnake:
+
+IncreaseSnake: ; aumenta o tamanho da cobra
     push r0
     push r1
     push r2
+
 
     call PrintMacas            ; Se a cobra come a comida, imprime outra
     call UpdateScore
@@ -361,26 +407,32 @@ IncreaseSnake:
     storei r1, r0            
     store Length, r2      
 
+
     pop r2
     pop r1
     pop r0
     jmp Andar_Skip
 
+
 ClearScreen:
     push r0
     push r1
 
+
     loadn r0, #1200           ; Define 1200 como o número de posições para limpar na tela
     loadn r1, #' '           
+
 
     ClearScreenLoop:
         dec r0               
         outchar r1, r0       
         jnz ClearScreenLoop  
 
+
     pop r1
     pop r0
     rts
+
 
 PrintScreen:
     push r0
@@ -388,10 +440,12 @@ PrintScreen:
     push r4
     push r5
 
+
     loadn r0, #0              ; Posição inicial deve ser o começo da tela
     loadn r3, #40             ; Passa para a próxima linha
     loadn r4, #41             ; Incremento do ponteiro
     loadn r5, #1200           ; Limite da tela
+
 
     PrintScreenLoop:
         call PrintStr         ; Chama a função para imprimir cada pixel
@@ -400,11 +454,13 @@ PrintScreen:
         cmp r0, r5            ; Verifica se o fim da tela foi alcançado
         jne PrintScreenLoop
 
+
     pop r5
     pop r4
     pop r3
     pop r0
     rts
+
 
 PrintStr:
     push r0
@@ -413,7 +469,9 @@ PrintStr:
     push r3
     push r4
 
+
     loadn r3, #'\0'           ; Critério de parada
+
 
     PrintStrLoop:
         loadi r4, r1          ; Obtém o primeiro caractere
@@ -425,6 +483,7 @@ PrintStr:
         inc r1                ; Incrementa o ponteiro da string
         jmp PrintStrLoop
 
+
     PrintStrExit:
         pop r4
         pop r3
@@ -433,11 +492,13 @@ PrintStr:
         pop r0
         rts
 
-PrintMacas:
+
+PrintMacas: ; imprime maças
     push r0
     push r1
     push r2
     push r3
+
 
     loadn r1, #4672            ; Caractere @ vermelho
     loadn r2, #Macas         
@@ -446,9 +507,11 @@ PrintMacas:
     loadi r2, r0              
     outchar r1, r2          
 
+
     inc r3                   
     store MacasIndex, r3
     store MacasPos, r2
+
 
     pop r3
     pop r2
@@ -456,11 +519,13 @@ PrintMacas:
     pop r0
     rts
 
+
 PrintFake:
     push r0
     push r1
     push r2
     push r3
+
 
     loadn r1, #2664            
     loadn r2, #Fake         
@@ -469,9 +534,11 @@ PrintFake:
     loadi r2, r0              
     outchar r1, r2          
 
+
     inc r3                   
     store FakeIndex, r3
     store FakePos, r2
+
 
     pop r3
     pop r2
@@ -479,9 +546,11 @@ PrintFake:
     pop r0
     rts
 
+
 Delay:
     push r0
     push r1
+
 
     loadn r1, #200            ; Define o valor inicial do contador externo
     DelayLoop2:
@@ -492,14 +561,18 @@ Delay:
         dec r1                ; Decrementa o contador externo
         jnz DelayLoop2        ; Se não zero, repete o loop externo
 
+
     pop r1
     pop r0
     rts
 
 
+
+
 DelayInitScreen:
     push r0
     push r1
+
 
     loadn r1, #1000            ; Define o valor inicial do contador externo
     DelayInitLoop2:
@@ -510,9 +583,11 @@ DelayInitScreen:
         dec r1                ; Decrementa o contador externo
         jnz DelayInitLoop2        ; Se não zero, repete o loop externo
 
+
     pop r1
     pop r0
     rts
+
 
 ResetScore:
     loadn r0, #'0'
@@ -522,72 +597,88 @@ ResetScore:
     call UpdateScoreDisplay
     rts
 
+
 UpdateScore:
     load r0, Unidade   
     loadn r1, #'9'          
     cmp r1, r0
     jeq AddTens
 
+
     inc r0
     store Unidade, r0
     jmp UpdateScoreDisplay
 
+
 AddTens:                   
     loadn r0, #'0'
     store Unidade, r0
+
 
     load r0, TenScore
     loadn r1, #'9'       
     cmp r1, r0
     jeq AddHundreds
 
+
     inc r0
     store TenScore, r0
     jmp UpdateScoreDisplay
 
+
 AddHundreds:                
     loadn r0, #'0'
     store TenScore, r0
+
 
     load r0, Centena
     loadn r1, #'9'        
     cmp r1, r0
     jeq TelaMorte
 
+
     inc r0
     store Centena, r0
     jmp UpdateScoreDisplay
+
 
 UpdateScoreDisplay:
     load r0, Unidade
     loadn r1, #78
     outchar r0, r1
 
+
     load r0, TenScore
     loadn r1, #77
     outchar r0, r1
+
 
     load r0, Centena
     loadn r1, #76
     outchar r0, r1
 
+
     rts
+
 
 DisplayScoreTelaMorte:
     load r0, Unidade
     loadn r1, #858          
     outchar r0, r1
 
+
     load r0, TenScore
     loadn r1, #857         
     outchar r0, r1
+
 
     load r0, Centena
     loadn r1, #856         
     outchar r0, r1
 
-    rts
 
+    rts
+; tela principal do jogo
 TelaJogo0  : string "|======================================|"
 TelaJogo1  : string "|                                      |"
 TelaJogo2  : string "|                                      |"
@@ -620,6 +711,8 @@ TelaJogo28 : string "|                                      |"
 TelaJogo29 : string "|======================================|"
 
 
+
+
 TelaApresentacao00: string "                                        "
 TelaApresentacao01: string "                                        "
 TelaApresentacao02: string "                                        "
@@ -650,6 +743,7 @@ TelaApresentacao26: string "               BOM JOGO!                "
 TelaApresentacao27: string "                                        "
 TelaApresentacao28: string "       PRESSIONE ENTER PARA COMECAR     "
 TelaApresentacao29: string "                                        "
+; tela de final do jogo
 
 
 TelaPosColisao00: string "                                        "
@@ -683,6 +777,7 @@ TelaPosColisao27: string "                                        "
 TelaPosColisao28: string "                                        "
 TelaPosColisao29: string "                                        "
 
+
 TelaAgradecimento00: string "                                        "
 TelaAgradecimento01: string "                                        "
 TelaAgradecimento02: string "                                        "
@@ -713,6 +808,7 @@ TelaAgradecimento26: string "                                        "
 TelaAgradecimento27: string "                                        "
 TelaAgradecimento28: string "                                        "
 TelaAgradecimento29: string "                                        "
+
 
 static Fake + #0, #537
 static Fake + #1, #1098
@@ -765,6 +861,7 @@ static Fake + #47, #400
 static Fake + #48, #609
 static Fake + #49, #250
 static Fake + #50, #728
+
 
 static Macas + #0, #536
 static Macas + #1, #1097
