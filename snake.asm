@@ -126,6 +126,7 @@ DrawSnake:
     loadn r2, #SnakeBody      
     loadn r4, #0             
     load r6, Length
+    call Delay
 
     DrawSnakeLoop:
         loadi r3, r2           
@@ -189,7 +190,7 @@ MoveSnake:
     push r0
     push r1
     push r2
-
+    call Delay
     call RecalculateSnakePos  
     load r0, SnakePos         ;
     load r2, FoodPos         
@@ -431,9 +432,9 @@ Delay:
     push r0
     push r1
 
-    loadn r1, #165            ; Define o valor inicial do contador externo
+    loadn r1, #200            ; Define o valor inicial do contador externo
     DelayLoop2:
-        loadn r0, #400       ; Define o valor inicial do contador interno
+        loadn r0, #600       ; Define o valor inicial do contador interno
     DelayLoop:
         dec r0                ; Decrementa o contador interno
         jnz DelayLoop         ; Se não zero, repete o loop interno
