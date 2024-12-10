@@ -29,12 +29,15 @@ UnitScore: var #1
 TenScore: var #1
 HundredScore: var #1
 
+FakeIndex: var #1              
+FakePos: var #1
 
 static UnitScore, #'0'
 static TenScore, #'0'
 static HundredScore, #'0'
 
 Food: var #1200
+Fake: var #1500
 
 InitGame:
     MenuScreen:
@@ -156,14 +159,17 @@ CheckCollision:
     loadn r1, #SnakeBody      ; Carrega o endereço do vetor dos corpos da cobra
     loadn r2, #0              
     load r4, Length           
-    loadn r5, #'|'            ; Carrega '*' para paredes
+    loadn r5, #'|'            ; Carrega '|' para paredes
+    loadn r6, #'/'
 
     CollisionLoop:
         cmp r2, r4           
         jeq CollisionEnd
         loadi r3, r1          
         cmp r0, r3           
-        jeq DeathScreen       
+        jeq DeathScreen
+        cmp r0, r6
+        jeq DeathScreen      
         inc r2              
         inc r1            
         jmp CollisionLoop
@@ -314,7 +320,8 @@ IncreaseSnake:
     push r2
 
     call PrintFood            ; Se a cobra come a comida, imprime outra
-    call UpdateScore         
+    call UpdateScore
+    call PrintFake         
     load r0, SnakeTailPos     
     load r2, Length          
     loadn r1, #SnakeBody
@@ -418,6 +425,28 @@ PrintFood:
     pop r0
     rts
 
+PrintFake:
+    push r0
+    push r1
+    push r2
+    push r3
+
+    loadn r1, #2664            
+    loadn r2, #Fake         
+    load r3, FakeIndex     
+    add r0, r2, r3            
+    loadi r2, r0              
+    outchar r1, r2          
+
+    inc r3                   
+    store FakeIndex, r3
+    store FakePos, r2
+
+    pop r3
+    pop r2
+    pop r1
+    pop r0
+    rts
 
 Delay:
     push r0
@@ -652,6 +681,58 @@ TelaAgradecimento26: string "                                        "
 TelaAgradecimento27: string "                                        "
 TelaAgradecimento28: string "                                        "
 TelaAgradecimento29: string "                                        "
+
+static Fake + #0, #537
+static Fake + #1, #1098
+static Fake + #2, #104
+static Fake + #3, #622
+static Fake + #4, #456
+static Fake + #5, #1088
+static Fake + #6, #777
+static Fake + #7, #1077
+static Fake + #8, #973
+static Fake + #9, #561
+static Fake + #10, #450
+static Fake + #11, #615
+static Fake + #12, #175
+static Fake + #13, #380
+static Fake + #14, #540
+static Fake + #15, #175
+static Fake + #16, #277
+static Fake + #17, #608
+static Fake + #18, #729
+static Fake + #19, #650
+static Fake + #20, #931
+static Fake + #21, #762
+static Fake + #22, #843
+static Fake + #23, #394
+static Fake + #24, #165
+static Fake + #25, #996
+static Fake + #26, #387
+static Fake + #27, #458
+static Fake + #28, #339
+static Fake + #29, #531
+static Fake + #30, #1078
+static Fake + #31, #845
+static Fake + #32, #989
+static Fake + #33, #968
+static Fake + #34, #217
+static Fake + #35, #193
+static Fake + #36, #562
+static Fake + #37, #481
+static Fake + #38, #911
+static Fake + #39, #751
+static Fake + #40, #201
+static Fake + #41, #627
+static Fake + #42, #407
+static Fake + #43, #577
+static Fake + #44, #1071
+static Fake + #45, #880
+static Fake + #46, #940
+static Fake + #47, #400
+static Fake + #48, #609
+static Fake + #49, #250
+static Fake + #50, #728
 
 static Food + #0, #536
 static Food + #1, #1097
