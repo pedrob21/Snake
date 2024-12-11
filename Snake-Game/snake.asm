@@ -1,5 +1,10 @@
 jmp Comecar
 
+;Davi Moreira de Santana - NUSP 15447584
+;Lucas Michael Genovese Huss Oliveira - NUSP 15577610
+;Marcel Henrique Rodrigues Batista - NUSP 15474421
+;Pedro Bernardo Rodrigues Pinto - NUSP 15590042
+
 
 ; 0 branco							0000 0000
 ; 256 marrom						0001 0000
@@ -510,7 +515,7 @@ PrintMacas: ; imprime maças
     push r3
 
 
-    loadn r1, #4672            ; Caractere @ vermelho
+    loadn r1, #2368            ; Caractere @ vermelho
     loadn r2, #Macas         
     load r3, MacasIndex     
     add r0, r2, r3            ; Calcula a posição da comida
@@ -537,7 +542,7 @@ PrintFake:
     push r3
 
 
-    loadn r1, #2880            
+    loadn r1, #2603           
     loadn r2, #Fake         
     load r3, FakeIndex     
     add r0, r2, r3            
@@ -836,10 +841,10 @@ TelaApresentacao04: string "                                        "
 TelaApresentacao05: string "                                        "
 TelaApresentacao06: string "            JOGO CRIADO POR:            "
 TelaApresentacao07: string "                                        "
-TelaApresentacao08: string "       DAVI MOREIRA                     "
-TelaApresentacao09: string "       LUCAS MICHAEL                    "
-TelaApresentacao10: string "       PEDRO BERNARDO                   "
-TelaApresentacao11: string "       MARCEL HENRIQUE                  "
+TelaApresentacao08: string "             DAVI MOREIRA               "
+TelaApresentacao09: string "             LUCAS MICHAEL              "
+TelaApresentacao10: string "            PEDRO BERNARDO              "
+TelaApresentacao11: string "            MARCEL HENRIQUE             "
 TelaApresentacao12: string "                                        "
 TelaApresentacao13: string "                                        "
 TelaApresentacao14: string "                                        "
@@ -852,7 +857,7 @@ TelaApresentacao20: string "        A  - MOVE PARA ESQUERDA         "
 TelaApresentacao21: string "        D  - MOVE PARA DIREITA          "
 TelaApresentacao22: string "                                        "
 TelaApresentacao23: string "       NEM *TUDO* EH O QUE PARECE       "
-TelaApresentacao24: string "            CUIDADO COM OS x            "
+TelaApresentacao24: string "           CUIDADO COM OS x E +         "
 TelaApresentacao25: string "                                        "
 TelaApresentacao26: string "               BOM JOGO!                "
 TelaApresentacao27: string "                                        "
@@ -929,57 +934,57 @@ static PowerUp + #1, #331
 static PowerUp + #2, #515
 static PowerUp + #3, #1047
 
-static Fake + #0, #537
-static Fake + #1, #1098
-static Fake + #2, #204
-static Fake + #3, #622
-static Fake + #4, #456
-static Fake + #5, #1088
-static Fake + #6, #777
-static Fake + #7, #1077
-static Fake + #8, #973
-static Fake + #9, #561
-static Fake + #10, #450
-static Fake + #11, #615
-static Fake + #12, #175
-static Fake + #13, #380
-static Fake + #14, #540
-static Fake + #15, #175
-static Fake + #16, #277
-static Fake + #17, #608
-static Fake + #18, #729
-static Fake + #19, #650
-static Fake + #20, #931
-static Fake + #21, #762
-static Fake + #22, #843
-static Fake + #23, #394
-static Fake + #24, #265
-static Fake + #25, #996
-static Fake + #26, #387
-static Fake + #27, #458
-static Fake + #28, #339
-static Fake + #29, #531
-static Fake + #30, #1078
-static Fake + #31, #845
-static Fake + #32, #989
-static Fake + #33, #968
-static Fake + #34, #217
-static Fake + #35, #193
-static Fake + #36, #562
-static Fake + #37, #481
-static Fake + #38, #911
-static Fake + #39, #751
-static Fake + #40, #201
-static Fake + #41, #627
-static Fake + #42, #407
-static Fake + #43, #577
-static Fake + #44, #1071
-static Fake + #45, #880
-static Fake + #46, #940
-static Fake + #47, #400
-static Fake + #48, #609
-static Fake + #49, #250
-static Fake + #50, #728
+static Fake + #0, #577
+static Fake + #1, #1238
+static Fake + #2, #244
+static Fake + #3, #662
+static Fake + #4, #496
+static Fake + #5, #1128
+static Fake + #6, #817
+static Fake + #7, #1117
+static Fake + #8, #1113
+static Fake + #9, #601
+static Fake + #10, #490
+static Fake + #11, #655
+static Fake + #12, #215
+static Fake + #13, #420
+static Fake + #14, #580
+static Fake + #15, #215
+static Fake + #16, #317
+static Fake + #17, #648
+static Fake + #18, #769
+static Fake + #19, #690
+static Fake + #20, #971
+static Fake + #21, #802
+static Fake + #22, #883
+static Fake + #23, #434
+static Fake + #24, #305
+static Fake + #25, #1036
+static Fake + #26, #427
+static Fake + #27, #498
+static Fake + #28, #379
+static Fake + #29, #571
+static Fake + #30, #1118
+static Fake + #31, #885
+static Fake + #32, #1029
+static Fake + #33, #1008
+static Fake + #34, #257
+static Fake + #35, #233
+static Fake + #36, #602
+static Fake + #37, #521
+static Fake + #38, #951
+static Fake + #39, #791
+static Fake + #40, #241
+static Fake + #41, #667
+static Fake + #42, #447
+static Fake + #43, #617
+static Fake + #44, #1111
+static Fake + #45, #920
+static Fake + #46, #980
+static Fake + #47, #440
+static Fake + #48, #649
+static Fake + #49, #290
+static Fake + #50, #768
 
 
 static Macas + #0, #536
