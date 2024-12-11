@@ -62,7 +62,7 @@ Comecar:
     MenuScreen: ; tela de menu inicial
         call ClearScreen      
         loadn r1, #TelaApresentacao00 
-        loadn r2, #2816        ; Cor roxa
+        loadn r2, #2816     ; Cor amarela
         call PrintScreen     
 
 
@@ -78,8 +78,8 @@ Comecar:
 Inicio:
     call ClearScreen          
     loadn r1, #TelaJogo0      
-    loadn r2, #2816            ; Cor azul claro
-    call PrintScreen           ; Imprime a cena do jogo na cor azul claro
+    loadn r2, #2816            ; Cor amarela
+    call PrintScreen           ; Imprime a cena do jogo na cor amarela
     loadn r5, #0               
     store Length, r5
     loadn r5, #0               
@@ -129,7 +129,7 @@ endGame: ; limpa a tela e exibe uma tela de agradecimento
 
 printThankYouScreen:
     loadn r1, #TelaAgradecimento00
-    loadn r2, #2816                ; Cor da impressão. Cor prata
+    loadn r2, #2816                ; Cor Amarela
     call PrintScreen
     rts
 
@@ -238,11 +238,11 @@ CheckCollision:
         
         loadn r7, #164
         cmp r0, r7
-        jeq TelaMorte
+        jeq TelaMorte             ; Morre se tocar na posição #164
         
         loadn r7, #1086
         cmp r0, r7
-        jeq TelaMorte
+        jeq TelaMorte             ; Morre se tocar na posição #1086
         
 
 
