@@ -9,3 +9,4 @@ Membros do grupo:
           <li>Marcel Henrique Rodrigues Batista - NUSP 15474421</li>
           <li>Pedro Bernardo Rodrigues Pinto - NUSP 15590042</li>
           </ul>
+Link do video explicando o codigo/jogo -> https://youtu.be/LViYpKKtbkM
